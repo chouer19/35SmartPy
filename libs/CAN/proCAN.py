@@ -24,7 +24,7 @@ class Gun_send:
 
 #ID: 0X100, read this brake message from CAN
 class Brake_read:
-    def __init__(self, motorTime=0x0000 , estopStatus=0x00 , buttonStatus=0x00 , pedalStatus=0x00 , canStatus=0x00 , remoteControl=0x00 , realStatus=0x00 ):
+    def __init__(self, motorTime=0x0000 , remoteStatus=0x00 , buttonStatus=0x00 , pedalStatus=0x00 , canStatus=0x00 , remoteControl=0x00 , realStatus=0x00 ):
         # byte[0] & byte[1], time of brake-motor runing 0x00  0x00 0x00 , time = byte[0x00 ] * 256 + byte[1]
         self.motorTime = motorTime
         # byte[2], if the brake button is pressed down 0x00 , 0x00  is false and 1 is true
@@ -62,11 +62,11 @@ class Steer_read:
         #0x31
         self.exception = exception
         #byte[3]
-        self.angleH = self.angleH
+        self.angleH = angleH
         #byte[4], angle = byte[3] * 256 + byte[4] - 1024
-        self.angleL = self.angleL
+        self.angleL = angleL
         #byte[5], no, done, failed, success
-        self.calib = steer
+        self.calib = calib
         self.by6 = 0x00
         #byte[7], xor check
         self.check = check
@@ -93,65 +93,69 @@ class CAN:
         self.steerRead = Steer_read()
         self.steerSend = Steer_send()
 
-        self.lib = ctypes.CDLL('/home/ubuntu/workspace/35SmartPy/CAN/brain/CANlib.so')
+        #self.lib = ctypes.CDLL('/home/ubuntu/workspace/35SmartPy/CAN/brain/CANlib.so')
+        self.lib = ctypes.CDLL('./CANlib.so')
         self.CANinit = self.lib.init
 
         self.CANreadGun = self.lib.readGun
-        self.CANreadGun.restype = ctypes.POINTER(ctypes.c_ubyte * 10)
+        self.CANreadGun.restype = ctypes.POINTER(ctypes.c_ubyte * 8)
 
         self.CANreadBrake = self.lib.readBrake
-        self.CANreadGun.restype = ctypes.POINTER(ctypes.c_ubyte * 10)
+        self.CANreadGun.restype = ctypes.POINTER(ctypes.c_ubyte * 8)
 
         self.CANreadSteer= self.lib.readSteer
-        self.CANreadSteer.restype = ctypes.POINTER(ctypes.c_ubyte * 10)
+        self.CANreadSteer.restype = ctypes.POINTER(ctypes.c_ubyte * 8)
 
         self.CANsendGun = self.lib.sendGun
-        self.CANsendGun = [ctypes.c_ubyte, ctypes.c_utype]
+        self.CANsendGun.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte]
 
         self.CANsendBrake = self.lib.sendBrake
-        self.CANsendBrake = [ctypes.c_ubyte, ctypes.c_utype]
+        self.CANsendBrake.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte]
 
         self.CANsendSteer= self.lib.sendSteer
-        self.CANsendSteer = [ctypes.c_ubyte, ctypes.c_utype, ctypes.c_utype, ctypes.c_utype]
+        self.CANsendSteer.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte]
 
-    def readGun():
-        read = self.CANreadGun()
-        self.gunRead.Mode = read.contents[0]
-        self.gunRead.Depth = read.contents[1]
-        self.gunRead.speed = read.contents[7]
+        #run init for ***
+        self.CANinit()
 
-    def readBrake():
-        read = self.CANreadBrake()
-        self.brakeRead.motorTime = read.contents[0] * 256 + read.contents[1]
-        self.brakeRead.buttonStatus = read.contents[2]
-        self.brakeRead.remoteStatus = read.contents[3]
-        self.brakeRead.pedalStatus = read.contents[4]
-        self.brakeRead.canStatus = read.contents[5]
-        self.brakeRead.remoteControl = read.contents[6]
-        self.brakeRead.realStatus = read.contents[7]
+    def readGun(self):
+        read = self.CANreadGun().contents
+        self.gunRead.Mode = read[0]
+        self.gunRead.Depth = read[1]
+        self.gunRead.speed = read[7]
 
-    def readSteer():
-        read = self.CANreadSteer()
-        self.steerRead.Mode = read.contents[0]
-        self.steerRead.torque = read.contents[1]
-        self.steerRead.exception = read.contents[2]
-        self.steerRead.angleH = read.contents[3]
-        self.steerRead.angleL = read.contents[4]
-        self.steerRead.calib = read.contents[5]
-        self.steerRead.by6 = read.contents[6]
-        self.steerRead.check = read.check[7]
+    def readBrake(self):
+        read = self.CANreadBrake().contents
+        self.brakeRead.motorTime = read[0] * 256 + read[1]
+        self.brakeRead.buttonStatus = read[2]
+        self.brakeRead.remoteStatus = read[3]
+        self.brakeRead.pedalStatus = read[4]
+        self.brakeRead.canStatus = read[5]
+        self.brakeRead.remoteControl = read[6]
+        self.brakeRead.realStatus = read[7]
 
-    def sendBrake(mode, depth):
+    def readSteer(self):
+        read = self.CANreadSteer().contents
+        self.steerRead.Mode = read[0]
+        self.steerRead.torque = read[1]
+        self.steerRead.exception = read[2]
+        self.steerRead.angleH = read[3]
+        self.steerRead.angleL = read[4]
+        self.steerRead.calib = read[5]
+        self.steerRead.by6 = read[6]
+        self.steerRead.check = read[7]
+
+    def sendBrake(self,mode, depth):
         self.brakeSend.Mode = mode
         self.brakeSend.Depth = depth
         self.CANsendBrake(mode,depth)
 
-    def sendGun(mode, depth):
+    def sendGun(self,mode, depth):
         self.gunSend.Mode = mode
         self.gunSend.Depth = depth
         self.CANsendGun(mode, depth)
 
-    def sendSteer(mode, angle, calib):
+    def sendSteer(self, mode, angle, calib):
         angleH = int((angle + 1024)/256)
         angleL = int ((angle + 1024) % 256)
         self.steerSend.Mode = mode

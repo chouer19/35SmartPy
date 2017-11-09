@@ -1,0 +1,32 @@
+
+pro serialization
+
+proCAN.py
+>>>CAN reference
+>>>new class CAN
+>>>function readGun,update gunRead (Mode, Depth, Speed)
+>>>function readBrake,update brakeRead ()
+>>>function readSteer
+>>>function sendBrake(mode,depth)
+>>>function sendGun(mode,depth)
+>>>function sendSteer(mode,angle,calib = 0x00)
+
+
+proSocket.py
+>>>zmq serial topic publish and subcribe
+
+>>>===========PUB=======================
+>>>from proSocket import SerialTopicContext
+>>>ctx = SerialTopicContext()
+>>>pub = ctx.socket(zmq.PUB)
+>>>pub.bind('tcp://*:6001')
+>>>content = {'name':'xuechong', 'age':24, 'school':'Tsinghua'}
+>>>pub.sendSerialTopic('test',content)
+
+>>>===========SUB=====================
+>>>ctx = SerialTopicContext()
+>>>sub = ctx.socket(zmq.SUB)
+>>>sub.connect('tcp://localhost:6001')
+>>>sub.setsockopt(zmq.SUBSCRIBE,'shabi')
+>>>content = sub.recvSerialTopic()
+>>>

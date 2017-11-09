@@ -4,13 +4,13 @@ import struct
 #msg for CAN of 35 smart car
 #ID: 0x199, read this gun message from CAN
 class Gun_read:
-    def __init__(self, Mode=0x00 , Depth=0x00 , speed=0x00 ):
+    def __init__(self, Mode=0x00 , Depth=0x00 , Speed=0x00 ):
         #byte[0] 0:manual control, 1: pc control
         self.Mode = Mode
         #byte[1] control depth
         self.Depth = Depth
-        #byte[7] speed
-        self.speed = speed
+        #byte[7] Speed
+        self.Speed = Speed
         pass
 
 #ID: 0x200, send this gun message to CAN
@@ -72,7 +72,7 @@ class Steer_read:
         self.check = check
 
 class Steer_send:
-    def __init__(self, Mode= 0x00, angleH = 0x00, angleL= 0x00 , angle_calib= 0x00):
+    def __init__(self, Mode= 0x00, angleH = 0x00, angleL= 0x00 , calib= 0x00):
         #byte[0], 0x00:stop control, 0x10:manual control, 0x20:pc control
         self.Mode = Mode
         #byte[3]
@@ -80,7 +80,7 @@ class Steer_send:
         #byte[4]
         self.angleL = angleL
         #byte[5], 0x55, only worked when manual control
-        self.calib = angle_calib
+        self.calib = calib
 
 
 
@@ -93,7 +93,8 @@ class CAN:
         self.steerRead = Steer_read()
         self.steerSend = Steer_send()
 
-        self.lib = ctypes.CDLL('/home/ubuntu/workspace/35SmartPy/CAN/brain/CANlib.so')
+        #self.lib = ctypes.CDLL('/home/ubuntu/workspace/35SmartPy/CAN/brain/CANlib.so')
+        self.lib = ctypes.CDLL('./CAN/CANlib.so')
         self.CANinit = self.lib.init
 
         self.CANreadGun = self.lib.readGun
@@ -106,21 +107,22 @@ class CAN:
         self.CANreadSteer.restype = ctypes.POINTER(ctypes.c_ubyte * 8)
 
         self.CANsendGun = self.lib.sendGun
-        self.CANsendGun = [ctypes.c_ubyte, ctypes.c_ubyte]
+        self.CANsendGun.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte]
 
         self.CANsendBrake = self.lib.sendBrake
-        self.CANsendBrake = [ctypes.c_ubyte, ctypes.c_ubyte]
+        self.CANsendBrake.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte]
 
         self.CANsendSteer= self.lib.sendSteer
-        self.CANsendSteer = [ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte]
+        self.CANsendSteer.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte]
 
+        #run init
         self.CANinit()
 
     def readGun(self):
         read = self.CANreadGun().contents
         self.gunRead.Mode = read[0]
         self.gunRead.Depth = read[1]
-        self.gunRead.speed = read[7]
+        self.gunRead.Speed = read[7]
 
     def readBrake(self):
         read = self.CANreadBrake().contents
@@ -153,8 +155,12 @@ class CAN:
         self.gunSend.Depth = depth
         self.CANsendGun(mode, depth)
 
-    def sendSteer(self, mode, angle, calib):
+    def sendSteer(self, mode, angle, calib = 0x00):
         angleH = int((angle + 1024)/256)
+        self.steerSend.angleH = angleH
         angleL = int ((angle + 1024) % 256)
+        self.steerSend.angleL = angleL
         self.steerSend.Mode = mode
+        self.steerSend.calib = calib
         self.CANsendSteer(mode, angleH, angleL, calib)
+
