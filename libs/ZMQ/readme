@@ -1,0 +1,20 @@
+
+class name is SerialTopicContext
+sendSerialTopic(topic, obj)
+recvSerialTopic
+
+
+examples like testPUB.py and testSUB.py
+---------pub
+ctx = SerialTopicContext()
+pub = ctx.socket(zmq.PUB)
+pub.bind('tcp://*:6001')
+pub.sendSerialTopic('test',content)
+
+
+---------sub
+ctx = SerialTopicContext()
+sub = ctx.socket(zmq.SUB)
+sub.connect('tcp://localhost:6001')
+sub.setsockopt(zmq.SUBSCRIBE,'shabi')
+content = sub.recvSerialTopic()
