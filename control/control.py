@@ -139,37 +139,54 @@ def main():
         global output
         global speed_way
 
-        pid10 = PID(P=9.8, I = 3.6, D = 1.1)
+        pid10 = PID(P=5.6, I = 9.8, D = 0.0)
         pid10.SetPoint = speed_set
         pid10.setWindup(6.0)
 
-        pid20 = PID(P=10.8, I = 1.8, D = 0.6)
+        pid15 = PID(P=5.6, I = 12.8, D = 0.0)
+        pid15.SetPoint = speed_set
+        pid15.setWindup(6.0)
+
+        pid20 = PID(P=5.0, I = 2.8, D = 0.0)
         pid20.SetPoint = speed_set
 
-        pid30 = PID(P= 11.8 , I = 4.8, D = 0.0)
+        pid30 = PID(P= 5.0, I = 4.8, D = 0.0)
         pid30.SetPoint = speed_set
 
-        pid40 = PID(P= 12.0 , I = 6.0, D = 0.0)
+        pid40 = PID(P= 5.0 , I = 6.0, D = 0.0)
         pid40.SetPoint = speed_set
        
+        pid50 = PID(P= 5.0 , I = 6.0, D = 0.0)
+        pid50.SetPoint = speed_set
+
         i = 0 
         while True:
+            if speed_set > 55:
+                speed_set = 55
             pid10.SetPoint = speed_set
             pid10.update(speed_back)
+            pid15.SetPoint = speed_set
+            pid15.update(speed_back)
             pid20.SetPoint = speed_set
             pid20.update(speed_back)
             pid30.SetPoint = speed_set
             pid30.update(speed_back)
             pid40.SetPoint = speed_set
             pid40.update(speed_back)
-            if speed_set <= 15:
+            pid50.SetPoint = speed_set
+            pid50.update(speed_back)
+            if speed_set <= 10:
                 output  = pid10.output
+            elif speed_set <= 15:
+                output  = pid15.output
             elif speed_set <= 25:
                 output  = pid20.output
             elif speed_set <= 35:
                 output = pid30.output
             elif speed_set <= 45:
                 output = pid40.output
+            elif speed_set <= 55:
+                output = pid50.output
             print('speed_set is : ',speed_set, 'speed_back', speed_back)
             print('output is : ',output)
 
@@ -177,8 +194,10 @@ def main():
                 speed_way = 'gun'
                 can.gunSend.Mode = speed_mode
                 #can.gunSend.Depth = min(25, int(output * 5.6))
+                if(speed_set <= 10):
+                    can.gunSend.Depth = min(35, int(0.42*output))
                 if(speed_set <= 15):
-                    can.gunSend.Depth = min(30, int(0.42*output))
+                    can.gunSend.Depth = min(35, int(0.42*output))
                 elif(speed_set <= 25):
                     can.gunSend.Depth = min(40, int(0.80*output))
                 elif(speed_set <= 35):
@@ -190,7 +209,6 @@ def main():
                 can.brakeSend.Mode = speed_mode
                 can.gunSend.Depth = 0
                 can.brakeSend.Depth = int(-0.1 * output)
-                #can.brakeSend.Depth = 1
             if output == 0:
                 can.brakeSend.Mode = 0x00
                 can.brakeSend.Depth = 0x00

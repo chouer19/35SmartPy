@@ -146,6 +146,7 @@ extern "C"  void sendGun(unsigned char control_mode, unsigned char control_depth
         send_gun[0].Data[7] = 0x00;
     }
     SendCanData(can250, send_gun, 1);
+    printf("send successfully on gun\n");
 }
 
 extern "C"  void sendSteer(unsigned char control_mode, unsigned char steer_h, unsigned char steer_l,unsigned char calib){

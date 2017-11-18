@@ -1,9 +1,9 @@
 
 import zmq
-from serialTopicSocket import *
+from proContext import *
 import time
 
-ctx = SerialTopicContext()
+ctx = proContext()
 pub = ctx.socket(zmq.PUB)
 pub.bind('tcp://*:6001')
 
@@ -12,7 +12,7 @@ content_ = {'name':'shabi', 'age':100, 'school':'Tuttle'}
 
 
 while True:
-    pub.sendSerialTopic('test',content)
+    pub.sendPro('test',content)
     time.sleep(0.2)
-    pub.sendSerialTopic('shabi',content_)
+    pub.sendPro('shabi',content_)
     time.sleep(0.2)

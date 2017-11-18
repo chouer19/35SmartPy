@@ -34,7 +34,7 @@ class PID:
     """PID Controller
     """
 
-    def __init__(self, P=0.2, I=0.0, D=0.0):
+    def __init__(self, P=10.8, I=1.8, D=0.9):
 
         self.Kp = P
         self.Ki = I
@@ -57,19 +57,20 @@ class PID:
 
         # Windup Guard
         self.int_error = 0.0
-        self.windup_guard = 20.0
+        self.windup_guard = 16.0
 
         self.output = 0.0
 
     def update(self, feedback_value):
         """Calculates PID value for given reference feedback
-        .. math::
             u(t) = K_p e(t) + K_i \int_{0}^{t} e(t)dt + K_d {de}/{dt}
         .. figure:: images/pid_1.png
            :align:   center
            Test PID with Kp=1.2, Ki=1, Kd=0.001 (test_pid.py)
         """
         error = self.SetPoint - feedback_value
+
+        #print('>>>PID:error is ' , self.SetPoint, ' - ' , feedback_value, '= ', error)
 
         self.current_time = time.time()
         delta_time = self.current_time - self.last_time
@@ -93,6 +94,7 @@ class PID:
             self.last_error = error
 
             self.output = self.PTerm + (self.Ki * self.ITerm) + (self.Kd * self.DTerm)
+            #print('>>>PID:output is  P:', self.PTerm , ' +  D:',self.Kd * self.DTerm)
 
     def setKp(self, proportional_gain):
         """Determines how aggressively the PID reacts to the current error with setting Proportional Gain"""
