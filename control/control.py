@@ -22,6 +22,7 @@ def main():
     global speed_mode
     global speed_way
     can = CAN()
+
     #publish current all can status
     ctx = proContext()
     pub = ctx.socket(zmq.PUB)
@@ -61,68 +62,47 @@ def main():
             #read and pub gun msg, update speed_back from canBUS
             can.readGun()
             content = {'Mode':can.gunRead.Mode, 'Depth':can.gunRead.Depth, 'Speed':can.gunRead.Speed}
-            if i == 25:
-                print('--->>>')
-                print('readGun : ',content)
             #pub.sendPro('CANgun',content)
-            #speed_back = can.gunRead.Speed
             if can.gunRead.SpeedCur - can.gunRead.Speed > 10:
                 can.gunRead.SpeedCur = can.gunRead.Speed
             speed_back = can.gunRead.Speed
-            #speed_back = s1
 
             #read and pub brake msg
             can.readBrake()
             content = {'Time':can.brakeRead.Time, 'Button':can.brakeRead.Button, 'Remoter':can.brakeRead.Remoter, 'Pedal':can.brakeRead.Pedal, 'Can':can.brakeRead.Pedal, 'RemoterS':can.brakeRead.RemoterS, 'Real':can.brakeRead.Real}
-            if i == 25:
-                print('--->>>')
-                print('readBrake : ',content)
             #pub.sendPro('CANbrake',content)
 
             #read and pub steer msg
             can.readSteer()
             content = {'Mode':can.steerRead.Mode, 'Torque':can.steerRead.Torque, 'EException':can.steerRead.EException, 'AngleH':can.steerRead.AngleH, 'AngleL':can.steerRead.AngleL, 'Calib':can.steerRead.Calib, 'By6':can.steerRead.By6, 'Check':can.steerRead.Check}
-            #if i == 25:
-                #print('--->>>')
-                #print('readSteer : ',content)
-                #print('******************************************************************************')
-                #print('******************************************************************************')
-                #i = 0
             #pub.sendPro('CANsteer',content)
 
             time.sleep(0.02)
 
     #receive comand from plan(decision) system
-    def recvAndSet():
+    def recvSpeedAndSet():
         global speed_set
-        global speed_back
         global speed_mode
-        global output
-        global speed_way
         while True:
             #receive speed
             content = subSpeed.recvPro()
-            print('=============================================')
-            print('recved speed msg from 8081', content)
-            print('=============================================')
             speed_mode = content['Mode']
             can.brakeSend.Mode = speed_mode
             can.gunSend.Mode = speed_mode
             speed_set = content['Value']
 
+    #receive comand from plan(decision) system
+    def recvSteerAndSet():
+        while True:
             #receive steer
-            #content = subSteer.recvPro()
+            content = subSteer.recvPro()
             #print('recved steer msg from 8081', content)
-            #can.steerSend.Mode = content['Mode']
-            #can.steerSend.AngleH =  int((content['Value']+ 1024)/256)
-            #can.seerSend.AngleL =  int ((content['Value'] + 1024) % 256)
+            can.steerSend.Mode = content['Mode']
+            can.steerSend.AngleH =  int((content['Value']+ 1024)/256)
+            can.seerSend.AngleL =  int ((content['Value'] + 1024) % 256)
 
     #send msg to CAN BUS
     def sendCmd():
-        global speed_set
-        global speed_back
-        global speed_mode
-        global output
         global speed_way
         while True:
             if speed_way == 'brake':
@@ -204,7 +184,7 @@ def main():
                     can.gunSend.Depth = min(50, int(0.58*output))
                 else:
                     can.gunSend.Depth = min(60, int(0.46*output))
-            if output < 0:
+            if output < -5:
                 speed_way = 'brake'
                 can.brakeSend.Mode = speed_mode
                 can.gunSend.Depth = 0
@@ -218,7 +198,9 @@ def main():
             time.sleep(0.25)
 
     #recv decision speed, steer, mode
-    thread.start_new_thread(recvAndSet, ())
+    thread.start_new_thread(recvSpeedAndSet, ())
+    #recv decision speed, steer, mode
+    thread.start_new_thread(recvSteerAndSet, ())
     #read, update can,as fallcack
     thread.start_new_thread(readAndPub, ())
     #control ,update value of cmd to CAN BUS
@@ -229,8 +211,7 @@ def main():
     i = 0
     while True:
         i = i + 1
-        if i== 5:
-            print(i)
+        i = i % 999999
         time.sleep(1)
 
 if __name__ == "__main__":
