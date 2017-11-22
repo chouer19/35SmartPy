@@ -16,7 +16,7 @@ def main():
     pub = ctx.socket(zmq.PUB)
     pub.bind('tcp://*:8082')
 
-    fi = open(time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()),'w')
+    #fi = open(time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()),'w')
 
     while True:
         gnss.read()
@@ -29,8 +29,8 @@ def main():
                    "Status":gnss.status}
         #fi.write(time.time())
         #fi.write('\t')
-        fi.write(content)
-        fi.write('\n')
+        #fi.write(content)
+        #fi.write('\n')
         pub.sendPro('CurGNSS',content)
         time.sleep(0.04)
 

@@ -14,9 +14,9 @@
 #include <string.h>
 
 unsigned char *gnss_read = new unsigned char[60];
-extern "C"  unsigned char *readGNSS(){
+extern "C" unsigned char *readGNSS(){
 
-    unsigned int uartlen = 0;
+    int uartlen = 0;
     if((uartlen = GetReceiveUartDataLen(MCU_UART)) > 59){
         unsigned char uartdata[uartlen+1];
         GetReceiveUartData(MCU_UART,uartdata,uartlen);
@@ -25,7 +25,6 @@ extern "C"  unsigned char *readGNSS(){
     while( (uartlen = GetReceiveUartDataLen(MCU_UART)) < 60 ){
         ;
     }
-
     GetReceiveUartData(MCU_UART, gnss_read, uartlen);
 
     return gnss_read;

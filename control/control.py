@@ -99,7 +99,8 @@ def main():
             #print('recved steer msg from 8081', content)
             can.steerSend.Mode = content['Mode']
             can.steerSend.AngleH =  int((content['Value']+ 1024)/256)
-            can.seerSend.AngleL =  int ((content['Value'] + 1024) % 256)
+            can.steerSend.AngleL =  int ((content['Value'] + 1024) % 256)
+            print("H: ",can.steerSend.AngleH,"  L:",can.steerSend.AngleL )
 
     #send msg to CAN BUS
     def sendCmd():
@@ -167,8 +168,8 @@ def main():
                 output = pid40.output
             elif speed_set <= 55:
                 output = pid50.output
-            print('speed_set is : ',speed_set, 'speed_back', speed_back)
-            print('output is : ',output)
+            #print('speed_set is : ',speed_set, 'speed_back', speed_back)
+            #print('output is : ',output)
 
             if output > 0:
                 speed_way = 'gun'
@@ -194,7 +195,7 @@ def main():
                 can.brakeSend.Depth = 0x00
                 can.gunSend.Mode = 0x00
                 can.gunSend.Depth = 0x00
-            print('speed_way : ',speed_way, 'gun mode', can.gunSend.Mode, 'depth ',can.gunSend.Depth)
+            #print('speed_way : ',speed_way, 'gun mode', can.gunSend.Mode, 'depth ',can.gunSend.Depth)
             time.sleep(0.25)
 
     #recv decision speed, steer, mode

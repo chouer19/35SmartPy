@@ -168,6 +168,23 @@ extern "C"  void sendSteer(unsigned char control_mode, unsigned char steer_h, un
     SendCanData(can250, send_gun, 1);
 }
 
+unsigned char *gnss_read = new unsigned char[60];
+extern "C" unsigned char *readGNSS(){
+
+    int uartlen = 0;
+    if((uartlen = GetReceiveUartDataLen(MCU_UART)) > 59){
+        unsigned char uartdata[uartlen+1];
+        GetReceiveUartData(MCU_UART,uartdata,uartlen);
+    }   
+
+    while( (uartlen = GetReceiveUartDataLen(MCU_UART)) < 60 ){
+        ;   
+    }   
+    GetReceiveUartData(MCU_UART, gnss_read, uartlen);
+
+    return gnss_read;
+}
+
 
 extern "C"  void init(void)
 {
