@@ -10,30 +10,12 @@ from proGNSS import *
 import UTM
 
 def main():
-    
-    #can = proCAN()
-    #gnss = GNSS()
     can = CAN()
     gnss = GNSS()
     ctx = proContext()
     pub = ctx.socket(zmq.PUB)
     pub.bind('tcp://*:8082')
 
-    def readSteer():
-        while True:
-            can.readSteer()
-    def readGun():
-        while True:
-            can.readGun()
-    def readBrake():
-        while True:
-            can.readBrake()
-
-    thread.start_new_thread(readSteer, ())
-    thread.start_new_thread(readGun , ())
-    thread.start_new_thread(readBrake, ())
-
-    #fi = open(time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()),'w')
     i=0
     while True:
         gnss.read()
