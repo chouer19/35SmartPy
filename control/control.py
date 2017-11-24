@@ -108,10 +108,16 @@ def main():
         while True:
             if speed_way == 'brake':
                 can.sendBrake()
+                content = {'Who':'brake', 'Mode':can.brakeSend.Mode, 'Depth':can.brakeSend.Depth}
+                pub.sendPro('Cmd',content)
             if speed_way == 'gun':
+                content = {'Who':'gun', 'Mode':can.gunSend.Mode, 'Depth':can.gunSend.Depth}
                 can.sendGun()
+                pub.sendPro('Cmd',content)
             can.sendSteer()
-            time.sleep(0.1)
+            content = {'Who':'steer', 'Mode':can.steerSend.Mode, 'Depth':can.steerSend.AngleH * 256 + can.steerSend.AngleL - 1024}
+            pub.sendPro('Cmd',content)
+            time.sleep(0.2)
 
     def control():
         global speed_set
@@ -196,7 +202,7 @@ def main():
                 can.gunSend.Mode = 0x00
                 can.gunSend.Depth = 0x00
             #print('speed_way : ',speed_way, 'gun mode', can.gunSend.Mode, 'depth ',can.gunSend.Depth)
-            time.sleep(0.25)
+            time.sleep(0.1)
 
     #recv decision speed, steer, mode
     thread.start_new_thread(recvSpeedAndSet, ())
