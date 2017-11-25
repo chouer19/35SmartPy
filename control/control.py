@@ -93,6 +93,7 @@ def main():
 
     #receive comand from plan(decision) system
     def recvSteerAndSet():
+        i = 0
         while True:
             #receive steer
             content = subSteer.recvPro()
@@ -100,7 +101,9 @@ def main():
             can.steerSend.Mode = content['Mode']
             can.steerSend.AngleH =  int((content['Value']+ 1024)/256)
             can.steerSend.AngleL =  int ((content['Value'] + 1024) % 256)
-            print("H: ",can.steerSend.AngleH,"  L:",can.steerSend.AngleL )
+            i = ( i+1 ) % 99999
+            if i % 25 == 0:
+                print("H: ",can.steerSend.AngleH,"  L:",can.steerSend.AngleL )
 
     #send msg to CAN BUS
     def sendCmd():

@@ -168,16 +168,16 @@ extern "C"  void sendSteer(unsigned char control_mode, unsigned char steer_h, un
     SendCanData(can250, send_gun, 1);
 }
 
-unsigned char *gnss_read = new unsigned char[60];
+unsigned char *gnss_read = new unsigned char[61];
 extern "C" unsigned char *readGNSS(){
 
     int uartlen = 0;
-    if((uartlen = GetReceiveUartDataLen(MCU_UART)) > 59){
+    if((uartlen = GetReceiveUartDataLen(MCU_UART)) > 60){
         unsigned char uartdata[uartlen+1];
         GetReceiveUartData(MCU_UART,uartdata,uartlen);
     }   
 
-    while( (uartlen = GetReceiveUartDataLen(MCU_UART)) < 60 ){
+    while( (uartlen = GetReceiveUartDataLen(MCU_UART)) < 61 ){
         ;   
     }   
     GetReceiveUartData(MCU_UART, gnss_read, uartlen);
@@ -191,5 +191,4 @@ extern "C"  void init(void)
     QueueInit();
     MCUUartInit();
     MCUUartListen();
-    InitCANOBJ(receive, 50);
 }

@@ -6,38 +6,47 @@ sys.path.append("../libs")
 from proContext import *
 from proPID import *
 import UTM 
+import math
 
 def main():
     ctx = proContext()
     pub = ctx.socket(zmq.PUB)
-    pub.bind('tcp://*:8083')
+    pub.bind('tcp://*:8081')
 
     subMap = ctx.socket(zmq.SUB)
     subMap.connect('tcp://localhost:8083')
     subMap.setsockopt(zmq.SUBSCRIBE,'Diff')
 
-    pidDis = PID(P=0.8, I = 0.0, D = 0.0)
-    pidHead = PID(P=1.0, I = 0.0, D = 0.0)
+    pidDis = PID(P=8.6, I = 3.0, D = 0.0)
+    pidHead = PID(P=6.6, I = 2.0, D = 0.0)
     def recvMap():
+        j = 0
         while True:
             content = subMap.recvPro()
-            pidDis.setPoint(0.0)
+            pidDis.SetPoint = 0.0
             pidDis.update(content['Dis'])
-            outDis = pidDis.output
+            outDis = pidDis.output * -1
 
-            pidHead.setPoint(0.0)
+            pidHead.SetPoint = 0
             pidHead.update(content['Head'])
-            outHead = pidHead.output
+            outHead = pidHead.output * -1
 
             steer = outDis + outHead
+            speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
+
             content = {'Mode':0x20,'Value':steer}
             pub.sendPro('PlanSteer',content)
-
-            speed = 10 * math.cos(content['DHead'])
-            content = {'Mode':0x02,'Value':speed}
+            j = (j + 1) % 999999
+            if j % 5 == 0:
+                print('PlanSteer--->', content)
+            content = {'Mode':0x00,'Value':speed}
+            if j % 5 == 0:
+                print('PlanSpeed>>>',content)
+                print('.......................................................')
             pub.sendPro('PlanSpeed',content)
             pass
     pass
+    recvMap()
 
 if __name__ == '__main__':
     main()

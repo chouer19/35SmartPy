@@ -9,7 +9,7 @@ class GNSS:
         #self.init()
 
         self.readGNSS = self.lib.readGNSS
-        self.readGNSS.restype = ctypes.POINTER(ctypes.c_ubyte* 60)
+        self.readGNSS.restype = ctypes.POINTER(ctypes.c_ubyte* 61)
         self.bytes = self.readGNSS().contents
         self.bytes_new = self.readGNSS().contents
         #for i in range(0,len(self.bytes_new)):
@@ -22,20 +22,20 @@ class GNSS:
         #for i in range(0,len(self.bytes_new)):
         #    self.bytes_new[i] = self.bytes_new[i] - 127
         mark = 0
-        for i in range(0,59):
+        for i in range(0,60):
             mark = i
             if self.bytes[i] == 0xaa and self.bytes[i+1] == 0x55:
                 break
         
         
-        if mark == 58 and not(self.bytes[59] == 0xaa and self.bytes_new[0] == 0x55):
-            mark = 60
-        res = self.bytes[mark:60]
+        if mark == 59 and not(self.bytes[60] == 0xaa and self.bytes_new[1] == 0x55):
+            mark = 61
+        res = self.bytes[mark:61]
 
         for i in range(0,mark):
             res.append(self.bytes_new[i])
 
-        result    = struct.unpack('<2B1H1I1B8i1I6h1B',bytearray(res[2:]))
+        result    = struct.unpack('<2B1H1I1B8i1I6h1B1B',bytearray(res[2:]))
 
         self.length = result[0]
         self.mode = result[1]

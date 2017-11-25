@@ -1,7 +1,6 @@
 import sys
 import time
 import thread
-
 sys.path.append("../libs")
 from proCAN import *
 from proContext import *
@@ -17,25 +16,29 @@ def main():
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8082')
         sub.setsockopt(zmq.SUBSCRIBE,'CurGNSS')
-        filename = time.strftime("%Y-%m-%d_%H:%M:%S.gnss", time.localtime())
+        filename = time.strftime("./data/%Y_%m_%d_%H_%M.gnss", time.localtime())
 
         f = open(filename,'w')
+        i = 0
         while True:
-            f.write(time.time())
-            f.write('\t')
             content = sub.recvPro()
-            f.write(content)
-            f.write('\n')
+            i = (i+1) % 9999999
+            f.write(str(time.time()))
+            f.write('\t')
+            #f.write(str(content))
+            content = str(content['Lat']) + '\t' + str(content['Lon']) + '\t' + str(content['Head']) + '\t' + str(content['Status']) + '\n'
+            print(content)
+            f.write((content))
         pass
 
     def logPlanSpeed():
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8081')
         sub.setsockopt(zmq.SUBSCRIBE,'PlanSpeed')
-        filename = time.strftime("%Y-%m-%d_%H:%M:%S.speed", time.localtime())
+        filename = time.strftime("./data/%Y_%m_%d_%H_%M_%S.speed", time.localtime())
         f = open(filename,'w')
         while True:
-            f.write(time.time())
+            f.write(str(time.time()))
             f.write('\t')
             content = sub.recvPro()
             f.write(content)
@@ -46,10 +49,10 @@ def main():
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8081')
         sub.setsockopt(zmq.SUBSCRIBE,'PlanSteer')
-        filename = time.strftime("%Y-%m-%d_%H:%M:%S.steer", time.localtime())
+        filename = time.strftime("./data/%Y_%m_%d_%H_%M_%S.steer", time.localtime())
         f = open(filename,'w')
         while True:
-            f.write(time.time())
+            f.write(str(time.time()))
             f.write('\t')
             content = sub.recvPro()
             f.write(content)
@@ -63,12 +66,12 @@ def main():
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8080')
         sub.setsockopt(zmq.SUBSCRIBE,'Cmd')
-        filename = time.strftime("%Y-%m-%d_%H:%M:%S.cmd", time.localtime())
+        filename = time.strftime("./data/%Y_%m_%d_%H_%M_%S.cmd", time.localtime())
         f = open(filename,'w')
         while True:
-            f.write(time.time())
-            f.write('\t')
             content = sub.recvPro()
+            f.write(str(time.time()))
+            f.write('\t')
             f.write(content)
             f.write('\n')
         pass
@@ -76,15 +79,16 @@ def main():
     def logCAN():
         pass
 
-
     #recv decision speed, steer, mode
     thread.start_new_thread(logGNSS, ())
     #recv decision speed, steer, mode
-    thread.start_new_thread(logPlan, ())
+    #thread.start_new_thread(logPlanSteer, ())
+    #recv decision speed, steer, mode
+    #thread.start_new_thread(logPlanSpeed, ())
     #read, update can,as fallcack
-    thread.start_new_thread(logNav, ())
+    #thread.start_new_thread(logNav, ())
     #control ,update value of cmd to CAN BUS
-    thread.start_new_thread(logCtrl, ())
+    #thread.start_new_thread(logCtrl, ())
 
     i = 0
     while True:
@@ -92,7 +96,5 @@ def main():
         i = i % 999999
         time.sleep(1)
 
-
-
-if __name__ = "__main__":
+if __name__ == "__main__":
     main()

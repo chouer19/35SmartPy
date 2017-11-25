@@ -10,7 +10,6 @@ from proGNSS import *
 import UTM
 
 def main():
-    can = CAN()
     gnss = GNSS()
     ctx = proContext()
     pub = ctx.socket(zmq.PUB)
@@ -19,7 +18,7 @@ def main():
     i=0
     while True:
         gnss.read()
-        content = {"Mode":gnss.mode,"Time1":gnss.time1,"Time2":gnss.time2, \
+        content = {"Length":gnss.length,"Mode":gnss.mode,"Time1":gnss.time1,"Time2":gnss.time2, \
                    "Num":gnss.num,"Lat":gnss.lat,"Lon":gnss.lon,"Height":gnss.height, \
                    "V_n":gnss.v_n,"V_e":gnss.v_e,"V_earth":gnss.v_earth, \
                    "Roll":gnss.roll,"Pitch":gnss.pitch,"Head":gnss.head, \
@@ -32,8 +31,7 @@ def main():
             print(content)
             print('************************')
             print('************************')
-        time.sleep(0.04)
+        time.sleep(0.02)
 
 if __name__ == "__main__":
     main()
-
