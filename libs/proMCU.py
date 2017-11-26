@@ -82,7 +82,32 @@ class Steer_send:
         #byte[5], 0x55, only worked when manual control
         self.Calib = Calib
 
-
+class GNSS_read:
+    def __init__(self):
+        self.bytes = []
+        self.byte_new = []
+        self.length = 0
+        self.mode = 0
+        self.time1 = 0
+        self.time2 = 0
+        self.num = 0
+        self.lat = 0
+        self.lon = 0
+        self.height = 0
+        self.v_n = 0
+        self.v_e = 0
+        self.v_earth = 0
+        self.roll = 0
+        self.pitch = 0
+        self.head = 0
+        self.a_n = 0
+        self.a_e = 0
+        self.a_earth = 0
+        self.v_roll = 0
+        self.v_pitch = 0
+        self.v_head = 0
+        self.status = 0
+        pass
 
 class MCU:
     def __init__(self):
@@ -92,6 +117,7 @@ class MCU:
         self.brakeSend = Brake_send()
         self.steerRead = Steer_read()
         self.steerSend = Steer_send()
+        self.gnssRead = GNSS_read()
 
         self.lib = ctypes.CDLL('/home/ubuntu/workspace/35SmartPy/libs/MCU/MCUlib.so')
         self.MCUinit = self.lib.init
@@ -122,46 +148,40 @@ class MCU:
         #run init
         self.MCUinit()
     def readGNSS(self):
-
-        self.bytes = self.bytes_new
-        self.byte_new = self.readGNSS().contents
+        self.gnssRead.bytes = self.gnssRead.bytes_new
+        self.gnssRead.byte_new = self.gnssRead.readGNSS().contents
         mark = 0
         for i in range(0,59):
             mark = i
-            if self.bytes[i] == 0xaa and self.bytes[i+1] == 0x55:
+            if self.gnssRead.bytes[i] == 0xaa and self.gnssRead.bytes[i+1] == 0x55:
                 break
-        
-        
-        if mark == 58 and not(self.bytes[59] == 0xaa and self.bytes_new[0] == 0x55):
+        if mark == 58 and not(self.gnssRead.bytes[59] == 0xaa and self.gnssRead.bytes_new[0] == 0x55):
             mark = 60
-        res = self.bytes[mark:60]
-
+        res = self.gnssRead.bytes[mark:60]
         for i in range(0,mark):
-            res.append(self.bytes_new[i])
-
-        result    = struct.unpack('<2B1H1I1B8i1I6h1B',bytearray(res[2:]))
-
-        self.length = result[0]
-        self.mode = result[1]
-        self.time1 = result[2]
-        self.time2 = result[3]
-        self.num = result[4]
-        self.lat = float (result[5] )/ (10 ** 7)
-        self.lon = float (result[6] )/ (10**7)
-        self.height = float (result[7] )/ (1000)
-        self.v_n = float (result[8] )/ (1000)
-        self.v_e = float (result[9] )/ (1000)
-        self.v_earth = float (result[10] )/ (1000)
-        self.roll = float (result[11] )/ (1000)
-        self.pitch = float (result[12] )/ (1000)
-        self.head = float (result[13] )/ (1000)
-        self.a_n = float (result[14] )/ (1000)
-        self.a_e = float (result[15] )/ (1000)
-        self.a_earth = float (result[16] )/ (1000)
-        self.v_roll = float (result[17] )/ (1000)
-        self.v_pitch = float (result[18] )/ (1000)
-        self.v_head = float (result[19] )/ (1000)
-        self.status = result[20]
+            res.append(self.gnssRead.bytes_new[i])
+        result  = struct.unpack('<2B1H1I1B8i1I6h1B',bytearray(res[2:]))
+        self.gnssRead.length = result[0]
+        self.gnssRead.mode = result[1]
+        self.gnssRead.time1 = result[2]
+        self.gnssRead.time2 = result[3]
+        self.gnssRead.num = result[4]
+        self.gnssRead.lat = float (result[5] )/ (10 ** 7)
+        self.gnssRead.lon = float (result[6] )/ (10**7)
+        self.gnssRead.height = float (result[7] )/ (1000)
+        self.gnssRead.v_n = float (result[8] )/ (1000)
+        self.gnssRead.v_e = float (result[9] )/ (1000)
+        self.gnssRead.v_earth = float (result[10] )/ (1000)
+        self.gnssRead.roll = float (result[11] )/ (1000)
+        self.gnssRead.pitch = float (result[12] )/ (1000)
+        self.gnssRead.head = float (result[13] )/ (1000)
+        self.gnssRead.a_n = float (result[14] )/ (1000)
+        self.gnssRead.a_e = float (result[15] )/ (1000)
+        self.gnssRead.a_earth = float (result[16] )/ (1000)
+        self.gnssRead.v_roll = float (result[17] )/ (1000)
+        self.gnssRead.v_pitch = float (result[18] )/ (1000)
+        self.gnssRead.v_head = float (result[19] )/ (1000)
+        self.gnssRead.status = result[20]
 
     def readGun(self):
         read = self.CANreadGun().contents
