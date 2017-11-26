@@ -28,7 +28,8 @@ def main():
         for line in fi.readlines():
             i = (i + 1) % 99999
             args = line.split('\t')
-            E,N,Z,Z_l = UTM.from_latlon(float(args[1]) , float(args[2]))
+            print(args[1])
+            E,N,Z,Z_l = UTM.from_latlon( float((args[1])) , float((args[2])) )
             if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.25  ):
                 hdMap.append( (float(args[1]),float(args[2]),float(args[3]),float(args[4])) )
                 lastE = E
@@ -44,6 +45,8 @@ def main():
         global node
         j = 0
         while True:
+            if node['Status'] < 0 or node['Status'] > 2:
+                continue
             curDis = 9999
             curPoint = 0
             tarDis = 9999
@@ -88,8 +91,8 @@ def main():
             b = math.sqrt( math.pow(easting - E2 ,2)  + math.pow(northing - N2  ,2)  )
             c = math.sqrt( math.pow(E1 - E2 ,2)  + math.pow(N1 - N2  ,2)  )
             p = (a + b + c)/2
-            h = math.sqrt(p * (p-a) * (p-b) * (p-c)) / c
-            x1 = (E1 - easting) * math.cos( math.radians(head) ) - (N1 - northing) * math.sin( math.radians(head) )
+            h = math.sqrt(p * (p-a) * (p-b) * (p-c)) * 2 / c
+            x1 = (E1 - easting) * math.cos( math.radians(node['Head']) ) - (N1 - northing) * math.sin( math.radians(node['Head']) )
             if x1 < 0:
                 dis = dis * -1
                 h = h * -1
@@ -158,10 +161,11 @@ def main():
         pass
     #thread.start_new_thread(draw, ())
 
+
     #recieve and search
     ctx = proContext()
     subGPS = ctx.socket(zmq.SUB)
-    subGPS.connect('tcp://localhost:8080')
+    subGPS.connect('tcp://localhost:8082')
     subGPS.setsockopt(zmq.SUBSCRIBE,'CurGNSS')
     i = 0
     while True:
