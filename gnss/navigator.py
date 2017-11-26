@@ -8,8 +8,8 @@ import UTM
 #convert string to dict
 import yaml
 #draw something
-import pygame, sys
-from pygame.locals import *
+#import pygame, sys
+#from pygame.locals import *
 
 global node
 node = {'Lat':0,'Lon':0,'Head':0,'Status':0,'V_e':0,'V_n':0,'V_earth':0}
@@ -156,13 +156,12 @@ def main():
             fpsClock.tick(FPS)
 
         pass
-    thread.start_new_thread(draw, ())
-
+    #thread.start_new_thread(draw, ())
 
     #recieve and search
     ctx = proContext()
     subGPS = ctx.socket(zmq.SUB)
-    subGPS.connect('tcp://localhost:8082')
+    subGPS.connect('tcp://localhost:8080')
     subGPS.setsockopt(zmq.SUBSCRIBE,'CurGNSS')
     i = 0
     while True:
