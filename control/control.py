@@ -77,6 +77,7 @@ def main():
 
         i = 0 
         while True:
+            time.sleep(0.2)
             if speed_set > 55:
                 speed_set = 55
             pid10.SetPoint = speed_set
