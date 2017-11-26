@@ -4,6 +4,7 @@ import time,math,thread,copy
 
 sys.path.append("../libs")
 from proContext import *
+from proUTM import *
 import UTM
 #convert string to dict
 import yaml
@@ -45,7 +46,7 @@ def main():
         global node
         j = 0
         while True:
-            if node['Status'] < 0 or node['Status'] > 2:
+            if node['Status'] < 0 or node['Status'] > 4:
                 continue
             curDis = 9999
             curPoint = 0
@@ -165,11 +166,12 @@ def main():
     #recieve and search
     ctx = proContext()
     subGPS = ctx.socket(zmq.SUB)
-    subGPS.connect('tcp://localhost:8082')
+    subGPS.connect('tcp://localhost:8080')
     subGPS.setsockopt(zmq.SUBSCRIBE,'CurGNSS')
     i = 0
     while True:
-        node = subGPS.recvPro()
+        content = subGPS.recvPro()
+        node = content
         i = (i+1) % 999
         if i % 20 == 0:
             pass

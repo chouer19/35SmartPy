@@ -1,7 +1,6 @@
 import sys
 import time
 import thread
-
 sys.path.append("../libs")
 from proContext import *
 from proMCU import *
@@ -23,9 +22,13 @@ def main():
     pub = ctx.socket(zmq.PUB)
     pub.bind('tcp://*:8080')
 
+    pubCAN = ctx.socket(zmq.PUB)
+    pubCAN.bind('tcp://*:8088')
+
     mcu = MCU()
 
     def readGNSS():
+        i = 0
         while True:
             mcu.readGNSS()
             content = {"Length":mcu.gnssRead.length,"Mode":mcu.gnssRead.mode,"Time1":mcu.gnssRead.time1,"Time2":mcu.gnssRead.time2, \
@@ -35,11 +38,17 @@ def main():
                        "A_n":mcu.gnssRead.a_n,"A_e":mcu.gnssRead.a_e,"A_earth":mcu.gnssRead.a_earth, \
                        "V_roll":mcu.gnssRead.v_roll,"V_pitch":mcu.gnssRead.v_pitch,"V_head":mcu.gnssRead.v_head, \
                        "Status":mcu.gnssRead.status}
+            i = (i+1) % 9999
+            if i%20 ==0:
+                print(content)
+                print('***************')
+                print('*************************************')
             pub.sendPro('CurGNSS',content)
         pass
 
     def readGun():
         while True:
+            time.sleep(0.05)
             mcu.readGun()
             content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
             pub.sendPro('CANGun',content)
@@ -47,15 +56,27 @@ def main():
 
     def readBrake():
         while True:
+            time.sleep(0.05)
             mcu.readBrake()
             content = {'Time':mcu.brakeRead.Time, 'Button':mcu.brakeRead.Button, 'Remoter':mcu.brakeRead.Remoter,\
                        'Pedal':mcu.brakeRead.Pedal, 'Can':mcu.brakeRead.Pedal, 'RemoterS':mcu.brakeRead.RemoterS, \
                        'Real':mcu.brakeRead.Real}
-            pub.sendPro('CANBrake',content)
+            pubCAN.sendPro('CANBrake',content)
+
+            mcu.readGun()
+            content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
+            pubCAN.sendPro('CANGun',content)
+
+            mcu.readSteer()
+            content = {'Mode':mcu.steerRead.Mode, 'Torque':mcu.steerRead.Torque, 'EException':mcu.steerRead.EException, \
+                       'AngleH':mcu.steerRead.AngleH, 'AngleL':mcu.steerRead.AngleL, 'Calib':mcu.steerRead.Calib, \
+                       'By6':mcu.steerRead.By6, 'Check':mcu.steerRead.Check}
+            pubCAN.sendPro('CANSteer',content)
         pass
 
     def readSteer():
         while True:
+            time.sleep(0.05)
             mcu.readSteer()
             content = {'Mode':mcu.steerRead.Mode, 'Torque':mcu.steerRead.Torque, 'EException':mcu.steerRead.EException, \
                        'AngleH':mcu.steerRead.AngleH, 'AngleL':mcu.steerRead.AngleL, 'Calib':mcu.steerRead.Calib, \
@@ -97,14 +118,14 @@ def main():
         subSteer.setsockopt(zmq.SUBSCRIBE,'PlanSteer')
         while True:
             content = subSteer.recvPro()
-            content = {'Who':'Steer','Mode':content['Mode'],'Value':content[Value]}
+            content = {'Who':'Steer','Mode':content['Mode'],'Value':content['Value']}
             sendCmd(content)
         pass
 
     thread.start_new_thread(readGNSS, ())
-    thread.start_new_thread(readGun, ())
+    #thread.start_new_thread(readGun, ())
     thread.start_new_thread(readBrake, ())
-    thread.start_new_thread(readSteer, ())
+    #thread.start_new_thread(readSteer, ())
     thread.start_new_thread(recvControl, ())
     thread.start_new_thread(recvSteer, ())
 

@@ -43,7 +43,7 @@ def main():
     def recvSpeedAndBack():
         global speed_back
         subCANSpeed = ctx.socket(zmq.SUB)
-        subCANSpeed.connect('tcp://localhost:8080')
+        subCANSpeed.connect('tcp://localhost:8088')
         subCANSpeed.setsockopt(zmq.SUBSCRIBE,'CANGun')
         while True:
             content = subCANSpeed.recvPro()

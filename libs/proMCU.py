@@ -1,4 +1,5 @@
 import ctypes
+import struct
 
 #msg for CAN of 35 smart car
 #ID: 0x199, read this gun message from CAN
@@ -84,8 +85,6 @@ class Steer_send:
 
 class GNSS_read:
     def __init__(self):
-        self.bytes = []
-        self.byte_new = []
         self.length = 0
         self.mode = 0
         self.time1 = 0
@@ -121,9 +120,11 @@ class MCU:
 
         self.lib = ctypes.CDLL('/home/ubuntu/workspace/35SmartPy/libs/MCU/MCUlib.so')
         self.MCUinit = self.lib.init
+        #run init
+        self.MCUinit()
 
         self.UARTreadGNSS = self.lib.readGNSS
-        self.UARTreadGNSS.restype = ctypes.POINTER(ctypes.c_ubyte* 60)
+        self.UARTreadGNSS.restype = ctypes.POINTER(ctypes.c_ubyte* 61)
         self.bytes = self.UARTreadGNSS().contents
         self.bytes_new = self.UARTreadGNSS().contents
         
@@ -145,21 +146,19 @@ class MCU:
         self.CANsendSteer= self.lib.sendSteer
         self.CANsendSteer.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte]
 
-        #run init
-        self.MCUinit()
     def readGNSS(self):
-        self.gnssRead.bytes = self.gnssRead.bytes_new
-        self.gnssRead.byte_new = self.gnssRead.readGNSS().contents
+        self.bytes = self.bytes_new
+        self.bytes_new = self.UARTreadGNSS().contents
         mark = 0
         for i in range(0,59):
             mark = i
-            if self.gnssRead.bytes[i] == 0xaa and self.gnssRead.bytes[i+1] == 0x55:
+            if self.bytes[i] == 0xaa and self.bytes[i+1] == 0x55:
                 break
-        if mark == 58 and not(self.gnssRead.bytes[59] == 0xaa and self.gnssRead.bytes_new[0] == 0x55):
+        if mark == 58 and not(self.bytes[59] == 0xaa and self.bytes_new[0] == 0x55):
             mark = 60
-        res = self.gnssRead.bytes[mark:60]
+        res = self.bytes[mark:60]
         for i in range(0,mark):
-            res.append(self.gnssRead.bytes_new[i])
+            res.append(self.bytes_new[i])
         result  = struct.unpack('<2B1H1I1B8i1I6h1B',bytearray(res[2:]))
         self.gnssRead.length = result[0]
         self.gnssRead.mode = result[1]
@@ -181,7 +180,7 @@ class MCU:
         self.gnssRead.v_roll = float (result[17] )/ (1000)
         self.gnssRead.v_pitch = float (result[18] )/ (1000)
         self.gnssRead.v_head = float (result[19] )/ (1000)
-        self.gnssRead.status = result[20]
+        self.gnssRead.status = result[20] & 0x3f
 
     def readGun(self):
         read = self.CANreadGun().contents

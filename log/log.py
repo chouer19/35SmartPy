@@ -14,7 +14,7 @@ def main():
     ctx = proContext()
     def logGNSS():
         sub = ctx.socket(zmq.SUB)
-        sub.connect('tcp://localhost:8082')
+        sub.connect('tcp://localhost:8080')
         sub.setsockopt(zmq.SUBSCRIBE,'CurGNSS')
         filename = time.strftime("./data/%Y_%m_%d_%H_%M.gnss", time.localtime())
 
