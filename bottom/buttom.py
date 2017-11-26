@@ -108,5 +108,10 @@ def main():
     thread.start_new_thread(recvControl, ())
     thread.start_new_thread(recvSteer, ())
 
+    i = 0
+    while True:
+        i = (i+1) % 9999
+        time.sleep(1)
+
 if __name__ == "__main__":
     main()
