@@ -1,6 +1,7 @@
 import sys
 import time
 import thread
+import math
 sys.path.append("../libs")
 from proContext import *
 from proMCU import *
@@ -26,6 +27,9 @@ def main():
     pubCAN.bind('tcp://*:8088')
 
     mcu = MCU()
+    canSpeed = 0
+    uartSpeed = 0
+    canSteer = 0
 
     def readGNSS():
         i = 0
@@ -38,6 +42,7 @@ def main():
                        "A_n":mcu.gnssRead.a_n,"A_e":mcu.gnssRead.a_e,"A_earth":mcu.gnssRead.a_earth, \
                        "V_roll":mcu.gnssRead.v_roll,"V_pitch":mcu.gnssRead.v_pitch,"V_head":mcu.gnssRead.v_head, \
                        "Status":mcu.gnssRead.status}
+            uartSpeed = math.sqrt (mcu.gnssRead.v_n ** 2 + mcu.gnssRead.v_e ** 2 + mcu.gnssRead.v_earth ** 2 )
             i = (i+1) % 9999
             if i%20 ==0:
                 print(content)
@@ -51,6 +56,7 @@ def main():
             time.sleep(0.05)
             mcu.readGun()
             content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
+            mcuSpeed = mcu.gunRead.Speed
             pub.sendPro('CANGun',content)
         pass
 
@@ -65,12 +71,14 @@ def main():
 
             mcu.readGun()
             content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
+            mcuSpeed = mcu.gunRead.Speed
             pubCAN.sendPro('CANGun',content)
 
             mcu.readSteer()
             content = {'Mode':mcu.steerRead.Mode, 'Torque':mcu.steerRead.Torque, 'EException':mcu.steerRead.EException, \
                        'AngleH':mcu.steerRead.AngleH, 'AngleL':mcu.steerRead.AngleL, 'Calib':mcu.steerRead.Calib, \
                        'By6':mcu.steerRead.By6, 'Check':mcu.steerRead.Check}
+            canSteer = mcu.steerRead.AngleH * 256 + mcu.steerRead.AngleL - 1024 + 15
             pubCAN.sendPro('CANSteer',content)
         pass
 
@@ -84,6 +92,9 @@ def main():
             pub.sendPro('CANSteer',content)
         pass
 
+    def alpha(v):
+        return 100/ (v**2)
+
     def sendCmd(content):
         if content['Who'] == 'Brake':
             mcu.brakeSend.Mode = content['Mode']
@@ -93,12 +104,18 @@ def main():
         elif content['Who'] == 'Gun':
             mcu.gunSend.Mode = content['Mode']
             mcu.gunSend.Depth = content['Value']
+            speed = math.min(canSpeed/3.6, uartSpeed)
+            if math.fabs(steer) > alpha(speed)):
+                mcu.gunSend.Depth = 0x00
             mcu.sendGun()
             pass
         elif content['Who'] == 'Steer':
+            speed = math.min(canSpeed/3.6, uartSpeed)
+            steer = content['Value']
+            steer = matn.min( steer, alpha(speed) )
             mcu.steerSend.Mode = content['Mode']
-            mcu.steerSend.AngleH =  int((content['Value']+ 1024)/256)
-            mcu.steerSend.AngleL =  int ((content['Value'] + 1024) % 256)
+            mcu.steerSend.AngleH =  int(steer + 1024)/256)
+            mcu.steerSend.AngleL =  int (steer + 1024) % 256)
             mcu.sendSteer()
             pass
         pass

@@ -34,7 +34,7 @@ def main():
             steer = outDis + outHead
             speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
 
-            content = {'Mode':0x20,'Value':steer}
+            content = {'Mode':0x20,'Value':steer - 15}
             pub.sendPro('PlanSteer',content)
             j = (j + 1) % 999999
             if j % 5 == 0:

@@ -29,7 +29,6 @@ def main():
         for line in fi.readlines():
             i = (i + 1) % 99999
             args = line.split('\t')
-            print(args[1])
             E,N,Z,Z_l = UTM.from_latlon( float((args[1])) , float((args[2])) )
             if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.25  ):
                 hdMap.append( (float(args[1]),float(args[2]),float(args[3]),float(args[4])) )
@@ -46,6 +45,7 @@ def main():
         global node
         j = 0
         while True:
+            time.sleep(0.05)
             if node['Status'] < 0 or node['Status'] > 4:
                 continue
             curDis = 9999
@@ -105,7 +105,6 @@ def main():
                 dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint][2]/2
             if curPoint + curPoint - tarPoint > 0:
                 ddhead = hdMap[tarPoint][2]/4 - hdMap[curPoint - 2][2]/2 + hdMap[curPoint - tarPoint + curPoint][2] / 4
-            #content = {'Dis':dis,'Head':head,'DHead':dhead,'DDHead':ddhead}
             content = {'Dis':h,'Head':head,'DHead':dhead,'DDHead':ddhead}
             pub.sendPro('Diff',content)
             j = (j + 1) % 9999
@@ -115,7 +114,6 @@ def main():
                 print('head = ',node['Head'])
                 print('========================================================================================')
             #except Exception:
-            #    print("A Error in search map")
     thread.start_new_thread(searchmap, ())
 
     def draw():
@@ -161,7 +159,6 @@ def main():
 
         pass
     #thread.start_new_thread(draw, ())
-
 
     #recieve and search
     ctx = proContext()
