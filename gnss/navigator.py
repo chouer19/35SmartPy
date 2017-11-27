@@ -39,7 +39,8 @@ def main():
     print('finished loading map')
 
     def alpha(ve):
-        return 1 * ve
+        #return 1 * ve
+        return 2.5 * math.log1p(ve)
 
     def searchmap():
         global node

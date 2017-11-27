@@ -108,18 +108,19 @@ def main():
         elif content['Who'] == 'Gun':
             mcu.gunSend.Mode = content['Mode']
             mcu.gunSend.Depth = content['Value']
-            speed = math.min(canSpeed/3.6, uartSpeed)
-            if math.fabs(steer) > alpha(speed)):
+            speed = min(canSpeed/3.6, uartSpeed)
+            if speed > 0 and math.fabs(steer) > alpha(speed):
                 mcu.gunSend.Depth = 0x00
             mcu.sendGun()
             pass
         elif content['Who'] == 'Steer':
-            speed = math.min(canSpeed/3.6, uartSpeed)
+            speed = min(canSpeed/3.6, uartSpeed)
             steer = content['Value']
-            steer = matn.min( steer, alpha(speed) )
+            if speed > 0:
+                steer = min( steer, alpha(speed) )
             mcu.steerSend.Mode = content['Mode']
-            mcu.steerSend.AngleH =  int(steer + 1024)/256)
-            mcu.steerSend.AngleL =  int (steer + 1024) % 256)
+            mcu.steerSend.AngleH =  int( (steer + 1024)/256)
+            mcu.steerSend.AngleL =  int ( (steer + 1024) % 256)
             mcu.sendSteer()
             pass
         pass
@@ -156,12 +157,12 @@ def main():
     i = 0
     while True:
         if time.time() - lastSteer > 2:
-            content = {'Who':'Steer','Mode':0x10,'Value':0x00}
-            sendCmd(content)
-            content = {'Who':'Brake','Mode':0x01,'Value':0x9f}
-            sendCmd(content)
-            content = {'Who':'Gun','Mode':0x00,'Value':0x00}
-            sendCmd(content)
+        #    content = {'Who':'Steer','Mode':0x10,'Value':0x00}
+        #    sendCmd(content)
+        #    content = {'Who':'Brake','Mode':0x01,'Value':0x9f}
+        #    sendCmd(content)
+        #    content = {'Who':'Gun','Mode':0x00,'Value':0x00}
+        #    sendCmd(content)
             pass
         if time.time() - lastCmd > 2:
             pass

@@ -17,8 +17,8 @@ def main():
     subMap.connect('tcp://localhost:8083')
     subMap.setsockopt(zmq.SUBSCRIBE,'Diff')
 
-    pidDis = PID(P=8.6, I = 3.0, D = 0.0)
-    pidHead = PID(P=6.6, I = 2.0, D = 0.0)
+    pidDis = PID(P=12.8, I = 3.6, D = 0.0)
+    pidHead = PID(P=7.8, I = 2.0, D = 0.0)
     def recvMap():
         j = 0
         while True:
