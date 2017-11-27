@@ -31,6 +31,10 @@ def main():
     uartSpeed = 0
     canSteer = 0
 
+    lastCmd = 0
+    lastSteer = 0
+    control = True
+
     def readGNSS():
         i = 0
         while True:
@@ -125,11 +129,13 @@ def main():
         subCAN.connect('tcp://localhost:8082')
         subCAN.setsockopt(zmq.SUBSCRIBE,'Cmd')
         while True:
+            lastCmd = time.time()
             content = subCAN.recvPro()
             sendCmd(content)
         pass
 
     def recvSteer():
+        lastSteer = time.time()
         subSteer = ctx.socket(zmq.SUB)
         subSteer.connect('tcp://localhost:8081')
         subSteer.setsockopt(zmq.SUBSCRIBE,'PlanSteer')
@@ -138,6 +144,7 @@ def main():
             content = {'Who':'Steer','Mode':content['Mode'],'Value':content['Value']}
             sendCmd(content)
         pass
+    
 
     thread.start_new_thread(readGNSS, ())
     #thread.start_new_thread(readGun, ())
@@ -148,6 +155,16 @@ def main():
 
     i = 0
     while True:
+        if time.time() - lastSteer > 2:
+            content = {'Who':'Steer','Mode':0x10,'Value':0x00}
+            sendCmd(content)
+            content = {'Who':'Brake','Mode':0x01,'Value':0x9f}
+            sendCmd(content)
+            content = {'Who':'Gun','Mode':0x00,'Value':0x00}
+            sendCmd(content)
+            pass
+        if time.time() - lastCmd > 2:
+            pass
         i = (i+1) % 9999
         time.sleep(1)
 
