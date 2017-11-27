@@ -13,9 +13,13 @@ import yaml
 #from pygame.locals import *
 
 global node
+global current
+global target
 node = {'Lat':0,'Lon':0,'Head':0,'Status':0,'V_e':0,'V_n':0,'V_earth':0}
 def main():
     global node
+    global current
+    global target
     hdMap = []
     ctx = proContext()
     pub = ctx.socket(zmq.PUB)
@@ -40,13 +44,16 @@ def main():
 
     def alpha(ve):
         #return 1 * ve
-        return 2.5 * math.log1p(ve)
+        #return 2.5 * math.log1p(ve)
+        return  ( math.log1p(ve) ) ** 3 + math.log1p(ve)
 
     def searchmap():
         global node
+        global current
+        global target
         j = 0
         while True:
-            time.sleep(0.05)
+            #time.sleep(0.05)
             if node['Status'] < 0 or node['Status'] > 4:
                 continue
             curDis = 9999
@@ -64,6 +71,7 @@ def main():
                 if dis < curDis:
                     curDis = dis
                     curPoint = i
+                    current = i
             #current v
             v = math.sqrt( math.pow( node['V_n'],2 ) + math.pow( node['V_e'],2 )  + math.pow( node['V_earth'],2 ) )
             for i in range(curPoint,len(hdMap)):
@@ -73,6 +81,7 @@ def main():
                 if dis < tarDis:
                     tarDis = dis
                     tarPoint = i
+                    target = i
             dis = curDis
             head = hdMap[tarPoint][2]
             head = head - node['Head']
@@ -119,7 +128,7 @@ def main():
 
     def draw():
         pygame.init()
-        screen = pygame.display.set_mode((1000,600))
+        screen = pygame.display.set_mode((1000,800))
         #screen = pygame.display.set_mode((1361,1001))
         pygame.display.set_caption("ququuququququuuq")
         FPS = 50
@@ -151,10 +160,15 @@ def main():
                 #print(E - centerE)
                 #mat.append( [int ((E-centerE) * 20) + 300 , int ((N - centerN)* 20)+  300] )
                 #print(mat)
-                pygame.draw.circle(screen, WHITE, [int ((E-centerE) * 20) + 500 , int (-1 * (N - centerN)* 20)+  300] , 1, 0)
+                pygame.draw.circle(screen, WHITE, [int ((E-centerE) * 20) + 500 , int (-1 * (N - centerN)* 20)+  400] , 1, 0)
             #pygame.draw.lines(screen, WHITE,False, mat, 1)
-            pygame.draw.circle(screen,GREEN,[500,300] , 1 , 0)
-            pygame.draw.line(screen, RED, [500, 300], [500 + EE, 300 + NN], 2)
+            pygame.draw.circle(screen,GREEN,[500,400] , 3 , 0)
+            
+            E,N,Z,Z_l = UTM.from_latlon( hdMap[current][0], hdMap[current][1] )
+            pygame.draw.circle(screen, YELLOW, [int ((E-centerE) * 20) + 500 , int (-1 * (N - centerN)* 20)+  400] , 2, 0)
+            E,N,Z,Z_l = UTM.from_latlon( hdMap[target][0], hdMap[target][1] )
+            pygame.draw.circle(screen, RED, [int ((E-centerE) * 20) + 500 , int (-1 * (N - centerN)* 20)+  400] , 2, 0)
+            pygame.draw.line(screen, RED, [500, 400], [500 + EE, 400 + NN], 2)
             pygame.display.update()
             fpsClock.tick(FPS)
 
