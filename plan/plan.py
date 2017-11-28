@@ -17,8 +17,15 @@ def main():
     subMap.connect('tcp://localhost:8083')
     subMap.setsockopt(zmq.SUBSCRIBE,'Diff')
 
-    pidDis = PID(P=12.8, I = 3.6, D = 0.0)
-    pidHead = PID(P=7.8, I = 2.0, D = 0.0)
+    pidDis = PID(P= 10.8, I = 0.0, D = 0.0)
+    pidDis.setWindup(50.0)
+    pidHead = PID(P= 3.8, I = 0.0, D = 0.0)
+    pidHead.setWindup(50.0)
+    pidDHead = PID(P=2.8, I = 0.0, D = 0.0)
+    pidDHead.setWindup(25.0)
+
+    
+
     def recvMap():
         j = 0
         while True:
@@ -31,19 +38,35 @@ def main():
             pidHead.update(content['Head'])
             outHead = pidHead.output * -1
 
-            steer = outDis + outHead
+            pidDHead.SetPoint = 0
+            pidDHead.update(content['DHead'])
+            outDHead = pidHead.output * -1
+
+            steer = outDis + outHead + outDHead
+            #if math.fabs(steer) > 70:
+            #    steer = steer * 1.1
+            #elif math.fabs(steer) > 90:
+            #    steer = steer * 1.2
+            #elif math.fabs(steer) > 110:
+            #    steer = steer * 1.3
+            #elif math.fabs(steer) > 130:
+            #    steer = steer * 1.4
+            #elif math.fabs(steer) > 140:
+            #    steer = steer * 1.5
+            #if steer > 500:
+            #    steer = 500
+            #if steer < -500:
+            #    steer = -500
             speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
 
-            content = {'Mode':0x20,'Value':steer - 15}
-            pub.sendPro('PlanSteer',content)
+            content = {'Mode':0x20,'Value':int(steer)  }
+            #pub.sendPro('PlanSteer',content)
             j = (j + 1) % 999999
-            if j % 5 == 0:
+            if j % 1 == 0:
                 print('PlanSteer--->', content)
-            content = {'Mode':0x00,'Value':speed}
-            if j % 5 == 0:
-                print('PlanSpeed>>>',content)
                 print('.......................................................')
-            pub.sendPro('PlanSpeed',content)
+            content = {'Mode':0x00,'Value':speed}
+            #pub.sendPro('PlanSpeed',content)
             pass
     pass
     recvMap()

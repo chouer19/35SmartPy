@@ -20,13 +20,13 @@ while True:
             i = (i+1) % 9999
             args = line.split('\t')
             rg= args[0]
-            content = args[1]
-            content = yaml.load(content)
+            lat,lon,head,status,canSpeed,gnssSpeed,Steer = args[1],args[2],args[3],args[4],args[5],args[6],args[7]
+            content = (args[1],args[2],args[3],args[4],args[5],args[6],args[7])
             pub.sendPro('CurGNSS',content)
-            if i%20 == 0:
-                print(content)
+            if i%25 == 0:
+                print('V : ',float(gnssSpeed) * 3.6, '  Steer : ',float(Steer) )
                 print('*********************************************************************************************************************************')
-            time.sleep(0.2)
+            time.sleep(0.05)
         pass
 #        break
 

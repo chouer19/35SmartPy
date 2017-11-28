@@ -13,11 +13,17 @@ global speed_back
 global speed_mode
 global output
 global speed_way
+global canSpeed
+global canSteer
+global planSteer
 
 output = 0
 
 def main():
 
+    global canSpeed
+    global canSteer
+    global planSteer
     ctx = proContext()
 
     pub = ctx.socket(zmq.PUB)
@@ -27,6 +33,7 @@ def main():
     pubCAN.bind('tcp://*:8088')
 
     mcu = MCU()
+
     canSpeed = 0
     uartSpeed = 0
     canSteer = 0
@@ -36,9 +43,12 @@ def main():
     control = True
 
     def readGNSS():
+        global canSpeed
+        global canSteer
         i = 0
         while True:
             mcu.readGNSS()
+            uartSpeed = math.sqrt (mcu.gnssRead.v_n ** 2 + mcu.gnssRead.v_e ** 2 + mcu.gnssRead.v_earth ** 2 )
             content = {"Length":mcu.gnssRead.length,"Mode":mcu.gnssRead.mode,"Time1":mcu.gnssRead.time1,"Time2":mcu.gnssRead.time2, \
                        "Num":mcu.gnssRead.num,"Lat":mcu.gnssRead.lat,"Lon":mcu.gnssRead.lon,"Height":mcu.gnssRead.height, \
                        "V_n":mcu.gnssRead.v_n,"V_e":mcu.gnssRead.v_e,"V_earth":mcu.gnssRead.v_earth, \
@@ -46,7 +56,6 @@ def main():
                        "A_n":mcu.gnssRead.a_n,"A_e":mcu.gnssRead.a_e,"A_earth":mcu.gnssRead.a_earth, \
                        "V_roll":mcu.gnssRead.v_roll,"V_pitch":mcu.gnssRead.v_pitch,"V_head":mcu.gnssRead.v_head, \
                        "Status":mcu.gnssRead.status}
-            uartSpeed = math.sqrt (mcu.gnssRead.v_n ** 2 + mcu.gnssRead.v_e ** 2 + mcu.gnssRead.v_earth ** 2 )
             i = (i+1) % 9999
             if i%20 ==0:
                 print(content)
@@ -55,16 +64,9 @@ def main():
             pub.sendPro('CurGNSS',content)
         pass
 
-    def readGun():
-        while True:
-            time.sleep(0.05)
-            mcu.readGun()
-            content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
-            mcuSpeed = mcu.gunRead.Speed
-            pub.sendPro('CANGun',content)
-        pass
-
-    def readBrake():
+    def readCAN():
+        global canSpeed
+        global canSteer
         while True:
             time.sleep(0.05)
             mcu.readBrake()
@@ -75,25 +77,16 @@ def main():
 
             mcu.readGun()
             content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
-            mcuSpeed = mcu.gunRead.Speed
+            canSpeed = mcu.gunRead.Speed
+            print('canSpeed',canSpeed)
             pubCAN.sendPro('CANGun',content)
 
             mcu.readSteer()
             content = {'Mode':mcu.steerRead.Mode, 'Torque':mcu.steerRead.Torque, 'EException':mcu.steerRead.EException, \
                        'AngleH':mcu.steerRead.AngleH, 'AngleL':mcu.steerRead.AngleL, 'Calib':mcu.steerRead.Calib, \
                        'By6':mcu.steerRead.By6, 'Check':mcu.steerRead.Check}
-            canSteer = mcu.steerRead.AngleH * 256 + mcu.steerRead.AngleL - 1024 + 15
+            canSteer = mcu.steerRead.AngleH * 256 + mcu.steerRead.AngleL - 1024
             pubCAN.sendPro('CANSteer',content)
-        pass
-
-    def readSteer():
-        while True:
-            time.sleep(0.05)
-            mcu.readSteer()
-            content = {'Mode':mcu.steerRead.Mode, 'Torque':mcu.steerRead.Torque, 'EException':mcu.steerRead.EException, \
-                       'AngleH':mcu.steerRead.AngleH, 'AngleL':mcu.steerRead.AngleL, 'Calib':mcu.steerRead.Calib, \
-                       'By6':mcu.steerRead.By6, 'Check':mcu.steerRead.Check}
-            pub.sendPro('CANSteer',content)
         pass
 
     def alpha(v):
@@ -105,7 +98,7 @@ def main():
             mcu.brakeSend.Depth = content['Value']
             mcu.sendBrake()
             pass
-        elif content['Who'] == 'Gun':
+        elif content['Who'] == 'Gun': 
             mcu.gunSend.Mode = content['Mode']
             mcu.gunSend.Depth = content['Value']
             speed = min(canSpeed/3.6, uartSpeed)
@@ -118,6 +111,12 @@ def main():
             steer = content['Value']
             if speed > 0:
                 steer = min( steer, alpha(speed) )
+            gap = 500.0 / ( (canSpeed/3.6) ** 2 )
+            if canSpeed > 20 and steer < planSteer - gap:
+                steer = planSteer - gap
+            if canSpeed > 20 and steer > planSteer + gap:
+                steer = planSteer + gap
+            planSteer =  steer
             mcu.steerSend.Mode = content['Mode']
             mcu.steerSend.AngleH =  int( (steer + 1024)/256)
             mcu.steerSend.AngleL =  int ( (steer + 1024) % 256)
@@ -146,11 +145,8 @@ def main():
             sendCmd(content)
         pass
     
-
     thread.start_new_thread(readGNSS, ())
-    #thread.start_new_thread(readGun, ())
-    thread.start_new_thread(readBrake, ())
-    #thread.start_new_thread(readSteer, ())
+    thread.start_new_thread(readCAN, ())
     thread.start_new_thread(recvControl, ())
     thread.start_new_thread(recvSteer, ())
 

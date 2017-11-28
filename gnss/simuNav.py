@@ -9,17 +9,18 @@ import UTM
 #convert string to dict
 import yaml
 #draw something
-#import pygame, sys
-#from pygame.locals import *
+import pygame, sys
+from pygame.locals import *
 
 global node
 global current
 global target
-node = {'Lat':0,'Lon':0,'Head':0,'Status':0,'V_e':0,'V_n':0,'V_earth':0}
+node = (0,0,0,0,0,0,0)
 def main():
     global node
     global current
     global target
+    current = 0
     hdMap = []
     ctx = proContext()
     pub = ctx.socket(zmq.PUB)
@@ -53,7 +54,6 @@ def main():
             return math.log1p(ve) + 1
         return  ve + 1
 
-
     def searchmap():
         global node
         global current
@@ -61,26 +61,28 @@ def main():
         j = 0
         while True:
             #time.sleep(0.05)
-            if node['Status'] < 0 or node['Status'] > 4:
+            args = node
+            lat,lon,head,status,canSpeed,gnssSpeed,Steer = float(args[0]),float(args[1]),float(args[2]),float(args[3]),float(args[4]),float(args[5]),float(args[6])
+            if status < 0 or status > 4:
                 continue
             curDis = 9999
             curPoint = 0
             tarDis = 9999
             tarPoint = 0
             #try:
-            easting,northing,zone,zone_letter = UTM.from_latlon(node['Lat'],node['Lon'])
+            easting,northing,zone,zone_letter = UTM.from_latlon(lat, lon)
             for i in range(0,len(hdMap)):
-                if math.fabs( int(node['Head']  - hdMap[i][2]) ) > 90 :
+                if math.fabs( int(head  - hdMap[i][2]) ) > 90 :
                     continue
                 #get nearest point ---> curPoint
                 E,N,Z,Z_l = UTM.from_latlon(hdMap[i][0] ,hdMap[i][1] )
-                dis = math.sqrt( math.pow(easting - E,2) + math.pow(northing - N,2)  )
+                dis = math.sqrt (math.fabs( math.pow(easting - E,2) + math.pow(northing - N,2) ) )
                 if dis < curDis:
                     curDis = dis
                     curPoint = i
                     current = i
             #current v
-            v = math.sqrt( math.pow( node['V_n'],2 ) + math.pow( node['V_e'],2 )  + math.pow( node['V_earth'],2 ) )
+            v = gnssSpeed
             for i in range(curPoint,len(hdMap)):
                 E,N,Z,Z_l= UTM.from_latlon(hdMap[i][0] ,hdMap[i][1] )
                 dis = math.fabs( math.sqrt( math.pow(easting - E,2) + \
@@ -90,12 +92,12 @@ def main():
                     tarPoint = i
                     target = i
             dis = curDis
-            head = hdMap[tarPoint][2]
-            head = head - node['Head']
-            if head < -180:
-                head = head + 360
-            if head > 180:
-                head = head - 360
+            Head = hdMap[tarPoint][2]
+            Head = Head - head
+            if Head < -180:
+                Head = Head + 360
+            if Head > 180:
+                Head = Head - 360
             #hai lun
             if curPoint == 0:
                 curPoint = curPoint + 1
@@ -109,8 +111,8 @@ def main():
             b = math.sqrt( math.pow(easting - E2 ,2)  + math.pow(northing - N2  ,2)  )
             c = math.sqrt( math.pow(E1 - E2 ,2)  + math.pow(N1 - N2  ,2)  )
             p = (a + b + c)/2
-            h = math.sqrt(p * (p-a) * (p-b) * (p-c)) * 2 / c
-            x1 = (E1 - easting) * math.cos( math.radians(node['Head']) ) - (N1 - northing) * math.sin( math.radians(node['Head']) )
+            h = math.sqrt( math.fabs((p * (p-a) * (p-b) * (p-c)) ) ) * 2 / c
+            x1 = (E1 - easting) * math.cos( math.radians(head) ) - (N1 - northing) * math.sin( math.radians(head) )
             if x1 < 0:
                 dis = dis * -1
                 h = h * -1
@@ -122,18 +124,20 @@ def main():
                 dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint][2]/2
             if curPoint + curPoint - tarPoint > 0:
                 ddhead = hdMap[tarPoint][2]/4 - hdMap[curPoint - 2][2]/2 + hdMap[curPoint - tarPoint + curPoint][2] / 4
-            content = {'Dis':h,'Head':head,'DHead':dhead,'DDHead':ddhead}
+            content = {'Dis':h,'Head':Head,'DHead':dhead,'DDHead':ddhead}
             pub.sendPro('Diff',content)
             j = (j + 1) % 9999
             time.sleep(0.05)
             if j%5 ==0:
+                print('Dis:',h,'  Head:',Head,'  DHead:',dhead)
                 print(content)
-                print('head = ',node['Head'])
                 print('========================================================================================')
             #except Exception:
     thread.start_new_thread(searchmap, ())
 
     def draw():
+        global current
+        global target
         pygame.init()
         screen = pygame.display.set_mode((500,500))
         #screen = pygame.display.set_mode((1361,1001))
@@ -159,28 +163,29 @@ def main():
                     pygame.quit()
                     sys.exit()
             mat = []
-            centerE,centerN,Z,Z_l = UTM.from_latlon( node['Lat'], node['Lon'] )
-            NN = -100 * math.cos( math.radians(node['Head']) )
-            EE = 100 * math.sin( math.radians(node['Head']) )
+            centerE,centerN,Z,Z_l = UTM.from_latlon( float(node[0]), float(node[1]) )
+            NN = -100 * math.cos( math.radians(float(node[2])) )
+            EE = 100 * math.sin( math.radians(float(node[2])) )
             for content in hdMap:
                 E,N,Z,Z_l = UTM.from_latlon( content[0], content[1] )
                 #print(E - centerE)
                 #mat.append( [int ((E-centerE) * 20) + 300 , int ((N - centerN)* 20)+  300] )
                 #print(mat)
-                pygame.draw.circle(screen, WHITE, [int ((E-centerE) * 20) + 250 , int (-1 * (N - centerN)* 5)+  250] , 1, 0)
+                pygame.draw.circle(screen, WHITE, [int ((E-centerE) * 10) + 250 , int (-1 * (N - centerN)* 10)+  250] , 1, 0)
             #pygame.draw.lines(screen, WHITE,False, mat, 1)
-            pygame.draw.circle(screen,GREEN,[500,400] , 3 , 0)
+            pygame.draw.circle(screen,GREEN,[250,250] , 3 , 0)
             
             E,N,Z,Z_l = UTM.from_latlon( hdMap[current][0], hdMap[current][1] )
-            pygame.draw.circle(screen, YELLOW, [int ((E-centerE) * 20) + 250 , int (-1 * (N - centerN)* 5)+  250] , 2, 0)
+            pygame.draw.circle(screen, YELLOW, [int ((E-centerE) * 10) + 250 , int (-1 * (N - centerN)* 10)+  250] , 2, 0)
             E,N,Z,Z_l = UTM.from_latlon( hdMap[target][0], hdMap[target][1] )
-            pygame.draw.circle(screen, RED, [int ((E-centerE) * 20) + 250 , int (-1 * (N - centerN)* 5)+  250] , 2, 0)
-            pygame.draw.line(screen, RED, [500, 400], [500 + EE, 250 + NN], 2)
+            pygame.draw.circle(screen, RED, [int ((E-centerE) * 10) + 250 , int (-1 * (N - centerN)* 10)+  250] , 2, 0)
+            pygame.draw.line(screen, RED, [250, 250], [250 + EE, 250 + NN], 2)
             pygame.display.update()
             fpsClock.tick(FPS)
 
         pass
-    #thread.start_new_thread(draw, ())
+
+    thread.start_new_thread(draw, ())
 
     #recieve and search
     ctx = proContext()
