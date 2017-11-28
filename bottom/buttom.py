@@ -78,7 +78,7 @@ def main():
             mcu.readGun()
             content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
             canSpeed = mcu.gunRead.Speed
-            print('canSpeed',canSpeed)
+            #print('canSpeed',canSpeed)
             pubCAN.sendPro('CANGun',content)
 
             mcu.readSteer()
@@ -86,6 +86,7 @@ def main():
                        'AngleH':mcu.steerRead.AngleH, 'AngleL':mcu.steerRead.AngleL, 'Calib':mcu.steerRead.Calib, \
                        'By6':mcu.steerRead.By6, 'Check':mcu.steerRead.Check}
             canSteer = mcu.steerRead.AngleH * 256 + mcu.steerRead.AngleL - 1024
+            #print('---------------------------------',canSteer)
             pubCAN.sendPro('CANSteer',content)
         pass
 
@@ -109,14 +110,16 @@ def main():
         elif content['Who'] == 'Steer':
             speed = min(canSpeed/3.6, uartSpeed)
             steer = content['Value']
-            if speed > 0:
-                steer = min( steer, alpha(speed) )
-            gap = 500.0 / ( (canSpeed/3.6) ** 2 )
-            if canSpeed > 20 and steer < planSteer - gap:
-                steer = planSteer - gap
-            if canSpeed > 20 and steer > planSteer + gap:
-                steer = planSteer + gap
-            planSteer =  steer
+            #if speed > 0:
+            #    steer = min( steer, alpha(speed) )
+            #gap  = 0
+            #if canSpeed > 0:
+            #    gap = 500.0 / ( (canSpeed/3.6) ** 2 )
+            #if canSpeed > 20 and steer < planSteer - gap:
+            #    steer = planSteer - gap
+            #if canSpeed > 20 and steer > planSteer + gap:
+            #    steer = planSteer + gap
+            #planSteer =  steer
             mcu.steerSend.Mode = content['Mode']
             mcu.steerSend.AngleH =  int( (steer + 1024)/256)
             mcu.steerSend.AngleL =  int ( (steer + 1024) % 256)
@@ -131,6 +134,7 @@ def main():
         while True:
             lastCmd = time.time()
             content = subCAN.recvPro()
+            #print(content)
             sendCmd(content)
         pass
 
@@ -142,6 +146,7 @@ def main():
         while True:
             content = subSteer.recvPro()
             content = {'Who':'Steer','Mode':content['Mode'],'Value':content['Value']}
+            #print(content)
             sendCmd(content)
         pass
     

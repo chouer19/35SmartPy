@@ -49,9 +49,9 @@ def main():
         #return 6
         #return  ( ( ve * math.log1p(ve) ) ) / 2 + ve + 2
         #return  ( ( math.log1p(ve) ) )  + ve + 2
-        if ve < 3:
-            return math.log1p(ve) + 1
-        return  ve + 1
+        if ve < 4:
+            return math.log1p(ve) + 4
+        return  ve/2 + 3
 
 
     def searchmap():
@@ -74,16 +74,16 @@ def main():
                     continue
                 #get nearest point ---> curPoint
                 E,N,Z,Z_l = UTM.from_latlon(hdMap[i][0] ,hdMap[i][1] )
-                dis = math.sqrt( math.pow(easting - E,2) + math.pow(northing - N,2)  )
+                dis = math.sqrt(math.fabs( math.pow(easting - E,2) + math.pow(northing - N,2))  )
                 if dis < curDis:
                     curDis = dis
                     curPoint = i
                     current = i
             #current v
-            v = math.sqrt( math.pow( node['V_n'],2 ) + math.pow( node['V_e'],2 )  + math.pow( node['V_earth'],2 ) )
+            v = math.sqrt( math.fabs(math.pow( node['V_n'],2 ) + math.pow( node['V_e'],2 )  + math.pow( node['V_earth'],2 ) )) 
             for i in range(curPoint,len(hdMap)):
                 E,N,Z,Z_l= UTM.from_latlon(hdMap[i][0] ,hdMap[i][1] )
-                dis = math.fabs( math.sqrt( math.pow(easting - E,2) + \
+                dis = math.fabs( math.sqrt( math.fabs(math.pow(easting - E,2 )) + \
                       math.pow(northing - N,2)  ) - alpha(v) )
                 if dis < tarDis:
                     tarDis = dis
@@ -109,7 +109,7 @@ def main():
             b = math.sqrt( math.pow(easting - E2 ,2)  + math.pow(northing - N2  ,2)  )
             c = math.sqrt( math.pow(E1 - E2 ,2)  + math.pow(N1 - N2  ,2)  )
             p = (a + b + c)/2
-            h = math.sqrt(p * (p-a) * (p-b) * (p-c)) * 2 / c
+            h = math.sqrt( math.sqrt(p * (p-a) * (p-b) * (p-c))) * 2 / c
             x1 = (E1 - easting) * math.cos( math.radians(node['Head']) ) - (N1 - northing) * math.sin( math.radians(node['Head']) )
             if x1 < 0:
                 dis = dis * -1

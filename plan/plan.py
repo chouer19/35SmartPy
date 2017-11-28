@@ -21,7 +21,7 @@ def main():
     pidDis.setWindup(50.0)
     pidHead = PID(P= 3.8, I = 0.0, D = 0.0)
     pidHead.setWindup(50.0)
-    pidDHead = PID(P=2.8, I = 0.0, D = 0.0)
+    pidDHead = PID(P=4.2, I = 0.0, D = 0.0)
     pidDHead.setWindup(25.0)
 
     
@@ -43,6 +43,7 @@ def main():
             outDHead = pidHead.output * -1
 
             steer = outDis + outHead + outDHead
+            #steer = outDis + outHead 
             #if math.fabs(steer) > 70:
             #    steer = steer * 1.1
             #elif math.fabs(steer) > 90:
@@ -59,8 +60,8 @@ def main():
             #    steer = -500
             speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
 
-            content = {'Mode':0x20,'Value':int(steer)  }
-            #pub.sendPro('PlanSteer',content)
+            content = {'Mode':0x20,'Value':int(steer - 15)  }
+            pub.sendPro('PlanSteer',content)
             j = (j + 1) % 999999
             if j % 1 == 0:
                 print('PlanSteer--->', content)
