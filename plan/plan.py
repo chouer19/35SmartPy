@@ -44,20 +44,6 @@ def main():
 
             steer = outDis + outHead + outDHead
             #steer = outDis + outHead 
-            #if math.fabs(steer) > 70:
-            #    steer = steer * 1.1
-            #elif math.fabs(steer) > 90:
-            #    steer = steer * 1.2
-            #elif math.fabs(steer) > 110:
-            #    steer = steer * 1.3
-            #elif math.fabs(steer) > 130:
-            #    steer = steer * 1.4
-            #elif math.fabs(steer) > 140:
-            #    steer = steer * 1.5
-            #if steer > 500:
-            #    steer = 500
-            #if steer < -500:
-            #    steer = -500
             speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
 
             content = {'Mode':0x20,'Value':int(steer - 15)  }
@@ -66,7 +52,7 @@ def main():
             if j % 1 == 0:
                 print('PlanSteer--->', content)
                 print('.......................................................')
-            content = {'Mode':0x00,'Value':speed}
+            content = {'Mode':0x00,'Value':speed,'Gear':0}
             #pub.sendPro('PlanSpeed',content)
             pass
     pass

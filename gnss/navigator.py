@@ -50,8 +50,8 @@ def main():
         #return  ( ( ve * math.log1p(ve) ) ) / 2 + ve + 2
         #return  ( ( math.log1p(ve) ) )  + ve + 2
         if ve < 4:
-            return math.log1p(ve) + 4
-        return  ve/2 + 3
+            return math.log1p(ve) + 4.06
+        return  ve * 2/3 + 3
 
 
     def searchmap():
@@ -119,7 +119,7 @@ def main():
             dhead = 0
             ddhead = 0
             if curPoint + curPoint - tarPoint > 0:
-                dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint][2]/2
+                dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint * 2 - tarPoint][2]/2
             if curPoint + curPoint - tarPoint > 0:
                 ddhead = hdMap[tarPoint][2]/4 - hdMap[curPoint - 2][2]/2 + hdMap[curPoint - tarPoint + curPoint][2] / 4
             content = {'Dis':h,'Head':head,'DHead':dhead,'DDHead':ddhead}

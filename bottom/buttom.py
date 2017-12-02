@@ -67,6 +67,7 @@ def main():
     def readCAN():
         global canSpeed
         global canSteer
+        i = 0
         while True:
             time.sleep(0.05)
             mcu.readBrake()
@@ -74,11 +75,16 @@ def main():
                        'Pedal':mcu.brakeRead.Pedal, 'Can':mcu.brakeRead.Pedal, 'RemoterS':mcu.brakeRead.RemoterS, \
                        'Real':mcu.brakeRead.Real}
             pubCAN.sendPro('CANBrake',content)
+            i = (i + 1)% 9999
+            if i % 25 == 0:
+                #print(content)
+                pass
 
             mcu.readGun()
             content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
             canSpeed = mcu.gunRead.Speed
-            #print('canSpeed',canSpeed)
+            print('canSpeed',canSpeed)
+            print('**********************************************************')
             pubCAN.sendPro('CANGun',content)
 
             mcu.readSteer()
@@ -112,14 +118,14 @@ def main():
             steer = content['Value']
             #if speed > 0:
             #    steer = min( steer, alpha(speed) )
-            #gap  = 0
-            #if canSpeed > 0:
-            #    gap = 500.0 / ( (canSpeed/3.6) ** 2 )
-            #if canSpeed > 20 and steer < planSteer - gap:
-            #    steer = planSteer - gap
-            #if canSpeed > 20 and steer > planSteer + gap:
-            #    steer = planSteer + gap
-            #planSteer =  steer
+            gap  = 0
+            if canSpeed > 25:
+                gap = 1000.0 / ( (canSpeed/3.6) ** 2 )
+            if canSpeed > 25 and steer < planSteer - gap:
+                steer = planSteer - gap
+            if canSpeed > 25 and steer > planSteer + gap:
+                steer = planSteer + gap
+            planSteer =  steer
             mcu.steerSend.Mode = content['Mode']
             mcu.steerSend.AngleH =  int( (steer + 1024)/256)
             mcu.steerSend.AngleL =  int ( (steer + 1024) % 256)
@@ -143,13 +149,17 @@ def main():
         subSteer = ctx.socket(zmq.SUB)
         subSteer.connect('tcp://localhost:8081')
         subSteer.setsockopt(zmq.SUBSCRIBE,'PlanSteer')
+        i = 0
         while True:
             content = subSteer.recvPro()
             content = {'Who':'Steer','Mode':content['Mode'],'Value':content['Value']}
-            #print(content)
+            i = (i + 1)% 9999
+            if i % 25 == 0:
+                pass
+                #print(content)
             sendCmd(content)
         pass
-    
+        
     thread.start_new_thread(readGNSS, ())
     thread.start_new_thread(readCAN, ())
     thread.start_new_thread(recvControl, ())

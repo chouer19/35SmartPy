@@ -1,5 +1,6 @@
 import ctypes
 import struct
+import time
 
 #msg for CAN of 35 smart car
 #ID: 0x199, read this gun message from CAN
@@ -125,8 +126,8 @@ class MCU:
 
         self.UARTreadGNSS = self.lib.readGNSS
         self.UARTreadGNSS.restype = ctypes.POINTER(ctypes.c_ubyte* 61)
-        self.bytes = self.UARTreadGNSS().contents
-        self.bytes_new = self.UARTreadGNSS().contents
+        self.bytes = []
+        self.bytes_new = []
         
         self.CANreadGun = self.lib.readGun
         self.CANreadGun.restype = ctypes.POINTER(ctypes.c_ubyte * 8)
@@ -145,8 +146,12 @@ class MCU:
 
         self.CANsendSteer= self.lib.sendSteer
         self.CANsendSteer.argtypes = [ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ubyte]
+        
+        
 
     def readGNSS(self):
+        if len(self.bytes_new) < 61:
+            self.bytes_new = self.UARTreadGNSS().contents
         self.bytes = self.bytes_new
         self.bytes_new = self.UARTreadGNSS().contents
         mark = 0
@@ -219,3 +224,7 @@ class MCU:
 
     def sendSteer(self):
         self.CANsendSteer(self.steerSend.Mode, self.steerSend.AngleH, self.steerSend.AngleL, self.steerSend.Calib)
+
+    def sendStop(self):
+        self.CANsendGun(self.gunSend.Mode, 0x00)
+        self.CANsendBrake(self.brakeSend.Mode,self.brakeSend.Depth)
