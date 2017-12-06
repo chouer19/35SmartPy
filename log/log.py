@@ -34,7 +34,7 @@ global    canSteerBy6
 global    canSteerCheck
 global    planSpeed
 global    planSpeedMode
-global planSpeedGear
+global    planSpeedGear
 global    planSteer
 global    planSteerMode
 global    navDis
