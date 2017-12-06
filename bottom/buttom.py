@@ -83,8 +83,8 @@ def main():
             mcu.readGun()
             content = {'Mode':mcu.gunRead.Mode, 'Depth':mcu.gunRead.Depth, 'Speed':mcu.gunRead.Speed}
             canSpeed = mcu.gunRead.Speed
-            print('canSpeed',canSpeed)
-            print('**********************************************************')
+            #print('canSpeed',canSpeed)
+            #print('**********************************************************')
             pubCAN.sendPro('CANGun',content)
 
             mcu.readSteer()
@@ -100,6 +100,7 @@ def main():
         return 100/ (v**2)
 
     def sendCmd(content):
+        global planSteer
         if content['Who'] == 'Brake':
             mcu.brakeSend.Mode = content['Mode']
             mcu.brakeSend.Depth = content['Value']
@@ -126,6 +127,7 @@ def main():
             if canSpeed > 25 and steer > planSteer + gap:
                 steer = planSteer + gap
             planSteer =  steer
+            #print('send steer is : ',steer)
             mcu.steerSend.Mode = content['Mode']
             mcu.steerSend.AngleH =  int( (steer + 1024)/256)
             mcu.steerSend.AngleL =  int ( (steer + 1024) % 256)

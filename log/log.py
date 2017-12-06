@@ -9,7 +9,83 @@ from proPID import *
 from proGNSS import *
 import UTM
 
+global    gnssLat
+global    gnssLon 
+global    gnssHead
+global    gnssStatus 
+global    gnssV 
+global    canBrakeMode 
+global    canBrakeTime 
+global    canBrakeButton 
+global    canBrakeRemoter 
+global    canBrakePedal 
+global    canBrakeRemoterS 
+global    canBrakeReal 
+global    canGunMode 
+global    canGunDepth 
+global    canGunSpeed 
+global    canSteerMode 
+global    canSteerTorque
+global    canSteerException
+global    canSteerAngleH
+global    canSteerAngleL
+global    canSteerCalib
+global    canSteerBy6
+global    canSteerCheck
+global    planSpeed
+global    planSpeedMode
+global planSpeedGear
+global    planSteer
+global    planSteerMode
+global    navDis
+global    navHead
+global    navDHead
+global    navDDHead
+global    controlWho 
+global    controlMode
+global    controlValue
+
 def main():
+    global    gnssLat
+    global    gnssLon 
+    global    gnssHead
+    global    gnssStatus 
+    global    gnssV 
+
+    global    canBrakeMode 
+    global    canBrakeTime 
+    global    canBrakeButton 
+    global    canBrakeRemoter 
+    global    canBrakePedal 
+    global    canBrakeRemoterS 
+    global    canBrakeReal 
+
+    global    canGunMode 
+    global    canGunDepth 
+    global    canGunSpeed 
+
+    global    canSteerMode 
+    global    canSteerTorque
+    global    canSteerException
+    global    canSteerAngleH
+    global    canSteerAngleL
+    global    canSteerCalib
+    global    canSteerBy6
+    global    canSteerCheck
+
+    global    planSpeed
+    global    planSpeedMode
+    global    planSteer
+    global    planSteerMode
+
+    global    navDis
+    global    navHead
+    global    navDHead
+    global    navDDHead
+
+    global    controlWho 
+    global    controlMode
+    global    controlValue
 
     ctx = proContext()
     gnssLat = 0
@@ -41,6 +117,7 @@ def main():
 
     planSpeed = 0
     planSpeedMode = 0
+    planSpeedGear = 0
     planSteer = 0
     planSteerMode = 0
 
@@ -54,6 +131,11 @@ def main():
     controlValue = 0x00
     
     def logGNSS():
+        global    gnssLat
+        global    gnssLon 
+        global    gnssHead
+        global    gnssStatus 
+        global    gnssV 
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8080')
         sub.setsockopt(zmq.SUBSCRIBE,'CurGNSS')
@@ -73,11 +155,19 @@ def main():
             gnssStatus = content['Status']
             gnssV = math.sqrt( content['V_n']**2 + content['V_e']**2 + content['V_earth']**2 )
             content = str(content['Lat']) + '\t' + str(content['Lon']) + '\t' + str(content['Head']) + '\t' + str(content['Status']) + '\n'
-	    print(content)
+	    #print(content)
             f.write((content))
         pass
 
     def logCANBrake():
+        global    canBrakeMode 
+        global    canBrakeTime 
+        global    canBrakeButton 
+        global    canBrakeRemoter 
+        global    canBrakePedal 
+        global    canBrakeRemoterS 
+        global    canBrakeReal 
+
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8088')
         sub.setsockopt(zmq.SUBSCRIBE,'CANBrake')
@@ -92,6 +182,15 @@ def main():
         pass
 
     def logCANSteer():
+        global    canSteerMode 
+        global    canSteerTorque
+        global    canSteerException
+        global    canSteerAngleH
+        global    canSteerAngleL
+        global    canSteerCalib
+        global    canSteerBy6
+        global    canSteerCheck
+
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8088')
         sub.setsockopt(zmq.SUBSCRIBE,'CANSteer')
@@ -108,6 +207,10 @@ def main():
         pass
 
     def logCANGun():
+        global    canGunMode 
+        global    canGunDepth 
+        global    canGunSpeed 
+
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8088')
         sub.setsockopt(zmq.SUBSCRIBE,'CANBrake')
@@ -119,6 +222,9 @@ def main():
         pass
 
     def logPlanSpeed():
+        global    planSpeed
+        global    planSpeedMode
+        global planSpeedGear
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8081')
         sub.setsockopt(zmq.SUBSCRIBE,'PlanSpeed')
@@ -126,9 +232,13 @@ def main():
             content = sub.recvPro()
             planSpeedMode = content['Mode']
             planSpeed = content['Value']
+            planSpeedGear = content['Gear']
         pass
 
     def logPlanSteer():
+        global    planSteer
+        global    planSteerMode
+
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8081')
         sub.setsockopt(zmq.SUBSCRIBE,'PlanSteer')
@@ -139,6 +249,11 @@ def main():
         pass
 
     def logNav():
+        global    navDis
+        global    navHead
+        global    navDHead
+        global    navDDHead
+
         subMap = ctx.socket(zmq.SUB)
         subMap.connect('tcp://localhost:8083')
         subMap.setsockopt(zmq.SUBSCRIBE,'Diff')
@@ -151,6 +266,9 @@ def main():
         pass
 
     def logCtrl():
+        global    controlWho 
+        global    controlMode
+        global    controlValue
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8082')
         sub.setsockopt(zmq.SUBSCRIBE,'Cmd')
@@ -178,7 +296,7 @@ def main():
         i = i + 1
         i = i % 999999
         time.sleep(0.1)
-        f.write(str(time.time()) + '\t' + \
+        line = (str(time.time()) + '\t' + \
         str(gnssLat)  + '\t' + \
         str(gnssLon)  + '\t' + \
         str(gnssHead) + '\t' + \
@@ -208,6 +326,7 @@ def main():
 
         str(planSpeed) + '\t' + \
         str(planSpeedMode) + '\t' + \
+        str(planSpeedGear) + '\t' + \
         str(planSteer) + '\t' + \
         str(planSteerMode) + '\t' + \
 
@@ -218,7 +337,13 @@ def main():
 
         str(controlWho) + '\t' + \
         str(controlMode) + '\t' + \
-        str(controlValue) + '\n'
+        str(controlValue) + '\n')
+        if i % 10 == 0:
+            print(line)
 
-if __name__ == "__main__":
+        f.write(line)
+
+if __name__ == '__main__':
     main()
+    pass
+

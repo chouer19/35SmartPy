@@ -30,15 +30,24 @@ def main():
         i = 0
         lastE = 0
         lastN = 0
+        line = fi.readlines()[0]
+        fi.close()
+        fi =  open('map.txt','r')
+        lastargs = line.split('\t')
         for line in fi.readlines():
             i = (i + 1) % 99999
             args = line.split('\t')
             E,N,Z,Z_l = UTM.from_latlon( float((args[1])) , float((args[2])) )
-            if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.25  ):
+            #ids = math.pow(E-lastE,2) + math.pow(N-lastN,2)
+            #print(ids)
+            if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.09  ):
+                hdMap.append( (float(lastargs[1])/2 + float(args[1])/2 ,  float(args[2])/2  + float(lastargs[2])/2 ,float(args[3])/2  + float(lastargs[3])/2   , float(args[4])/2  + float(lastargs[4]) /2 ) )
                 hdMap.append( (float(args[1]),float(args[2]),float(args[3]),float(args[4])) )
                 lastE = E
                 lastN = N
+                lastargs[1],lastargs[2],lastargs[3],lastargs[4] = args[1],args[2],args[3],args[4]
         fi.close()
+        print('length map is ',len(hdMap))
     loadmap()
     print('finished loading map')
 
@@ -49,9 +58,11 @@ def main():
         #return 6
         #return  ( ( ve * math.log1p(ve) ) ) / 2 + ve + 2
         #return  ( ( math.log1p(ve) ) )  + ve + 2
-        if ve < 4:
-            return math.log1p(ve) + 4.06
-        return  ve * 2/3 + 3
+        #if ve < 4:
+        #    return math.log1p(ve)
+        #return  ve * 2/3 + 3
+        #return  ve  + 1
+        return  math.log1p(ve * 5) * 2.5 # 12.05
 
 
     def searchmap():
@@ -109,7 +120,9 @@ def main():
             b = math.sqrt( math.pow(easting - E2 ,2)  + math.pow(northing - N2  ,2)  )
             c = math.sqrt( math.pow(E1 - E2 ,2)  + math.pow(N1 - N2  ,2)  )
             p = (a + b + c)/2
-            h = math.sqrt( math.sqrt(p * (p-a) * (p-b) * (p-c))) * 2 / c
+            h = 0
+            if c > 0:
+                h = math.sqrt( math.sqrt(p * (p-a) * (p-b) * (p-c))) * 2 / c
             x1 = (E1 - easting) * math.cos( math.radians(node['Head']) ) - (N1 - northing) * math.sin( math.radians(node['Head']) )
             if x1 < 0:
                 dis = dis * -1
@@ -119,9 +132,11 @@ def main():
             dhead = 0
             ddhead = 0
             if curPoint + curPoint - tarPoint > 0:
-                dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint * 2 - tarPoint][2]/2
+                #dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint * 2 - tarPoint][2]/2
+                dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint][2]/2
+                #dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint + ( curPoint - tarPoint)/3 ][2]/2
             if curPoint + curPoint - tarPoint > 0:
-                ddhead = hdMap[tarPoint][2]/4 - hdMap[curPoint - 2][2]/2 + hdMap[curPoint - tarPoint + curPoint][2] / 4
+                ddhead = hdMap[tarPoint][2]/4 - hdMap[curPoint - 2][2] / 2 + hdMap[curPoint - tarPoint + curPoint][2] / 4
             content = {'Dis':h,'Head':head,'DHead':dhead,'DDHead':ddhead}
             pub.sendPro('Diff',content)
             j = (j + 1) % 9999

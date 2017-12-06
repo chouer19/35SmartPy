@@ -17,11 +17,13 @@ def main():
     subMap.connect('tcp://localhost:8083')
     subMap.setsockopt(zmq.SUBSCRIBE,'Diff')
 
-    pidDis = PID(P= 10.8, I = 0.0, D = 0.0)
+    pidDis = PID(P= 8.2, I = 0.0, D = 0.5)
     pidDis.setWindup(50.0)
-    pidHead = PID(P= 3.8, I = 0.0, D = 0.0)
+    pidHead = PID(P= 4.2, I = 0.0, D = 0.8)
+    #pidHead = PID(P= 0.0, I = 0.0, D = 0.0)
     pidHead.setWindup(50.0)
-    pidDHead = PID(P=4.2, I = 0.0, D = 0.0)
+    pidDHead = PID(P=4.6, I = 0.0, D = 0.6)
+    #pidDHead = PID(P=0.0, I = 0.0, D = 0.0)
     pidDHead.setWindup(25.0)
 
     
@@ -43,6 +45,7 @@ def main():
             outDHead = pidHead.output * -1
 
             steer = outDis + outHead + outDHead
+            #steer = outHead + outDHead
             #steer = outDis + outHead 
             speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
 
