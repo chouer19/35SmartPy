@@ -115,18 +115,7 @@ def main():
             mcu.sendGun()
             pass
         elif content['Who'] == 'Steer':
-            speed = min(canSpeed/3.6, uartSpeed)
             steer = content['Value']
-            #if speed > 0:
-            #    steer = min( steer, alpha(speed) )
-            gap  = 0
-            if canSpeed > 25:
-                gap = 1000.0 / ( (canSpeed/3.6) ** 2 )
-            if canSpeed > 25 and steer < planSteer - gap:
-                steer = planSteer - gap
-            if canSpeed > 25 and steer > planSteer + gap:
-                steer = planSteer + gap
-            planSteer =  steer
             #print('send steer is : ',steer)
             mcu.steerSend.Mode = content['Mode']
             mcu.steerSend.AngleH =  int( (steer + 1024)/256)
@@ -147,14 +136,31 @@ def main():
         pass
 
     def recvSteer():
+        steer_limit = []
+        def loadSteerConfig():
+            with open('config') as f:
+                for line in f.readlines():
+                    steer_limit.append(int(line))
+        loadSteerConfig()
         lastSteer = time.time()
         subSteer = ctx.socket(zmq.SUB)
         subSteer.connect('tcp://localhost:8081')
         subSteer.setsockopt(zmq.SUBSCRIBE,'PlanSteer')
+        lastSteer = 0
+        steer = 0
         i = 0
         while True:
             content = subSteer.recvPro()
-            content = {'Who':'Steer','Mode':content['Mode'],'Value':content['Value']}
+            steer = content['Value']
+            gap = 0
+            if (canSpeed < len(steer_limit)):
+                gap = steer_limit[int(canSpeed)]
+            if steer - lastSteer > gap:
+                steer = lastSteer + gap
+            elif steer - lastSteer < -1 * gap:
+                steer = lastSteer - gap
+            lastSteer = steer
+            content = {'Who':'Steer','Mode':content['Mode'],'Value':steer}
             i = (i + 1)% 9999
             if i % 25 == 0:
                 pass
