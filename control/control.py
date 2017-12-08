@@ -44,6 +44,8 @@ def main():
             speed_mode = content['Mode']
             speed_set = content['Value']
             speed_gear = content['Gear']
+            speed_gear = max(speed_gear, 6)
+            speed_gear = min(speed_gear, 0)
 
     def recvSpeedAndBack():
         global speed_back
@@ -113,9 +115,9 @@ def main():
                 pass
 
             #brake to stop
-            if speed_set < 0 :
+            if speed_set <= 0 :
                 speed_set = max(speed_set,-6)
-                content = {'Who':'Brake','Mode':speed_mode,'Value':57.5 + math.fabs(int(speed_set * 22.5))}
+                content = {'Who':'Brake','Mode':speed_mode,'Value':57.5 + int(speed_gear * 22.5) }
                 pub.sendPro('Cmd',content)
                 continue
                 pass
@@ -142,11 +144,11 @@ def main():
             if output > 0:
                 Depth = 0
                 if(speed_set <= 10):
-                    Depth = min(35 + speed_gear * 5, int(0.42*output))
+                    Depth = min(35 + speed_gear * 2, int(0.42*output))
                 if(speed_set <= 15):
-                    Depth = min(35 + speed_gear * 5, int(0.42*output))
+                    Depth = min(35 + speed_gear * 3, int(0.42*output))
                 elif(speed_set <= 25):
-                    Depth = min(40 + speed_gear * 5, int(0.80*output))
+                    Depth = min(40 + speed_gear * 4, int(0.80*output))
                 elif(speed_set <= 35):
                     Depth = min(50 + speed_gear * 5, int(0.58*output))
                 elif(speed_set <= 45):
@@ -154,7 +156,7 @@ def main():
                 elif(speed_set <= 55):
                     Depth = min(65 + speed_gear * 5, int(0.47*output))
                 else:
-                    Depth = min(70 + speed_gear * 5, int(0.46*output))
+                    Depth = min(70 + speed_gear * 6, int(0.46*output))
                 content = {'Who':'Gun','Mode':speed_mode,'Value':Depth}
                 pub.sendPro('Cmd',content)
                 if i % 4 == 0:
