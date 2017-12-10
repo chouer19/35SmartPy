@@ -40,7 +40,7 @@ def main():
             E,N,Z,Z_l = UTM.from_latlon( float((args[1])) , float((args[2])) )
             #ids = math.pow(E-lastE,2) + math.pow(N-lastN,2)
             #print(ids)
-            if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.09  ):
+            if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.10  ):
                 hdMap.append( (float(lastargs[1])/2 + float(args[1])/2 ,  float(args[2])/2  + float(lastargs[2])/2 ,float(args[3])/2  + float(lastargs[3])/2   , float(args[4])/2  + float(lastargs[4]) /2 ) )
                 hdMap.append( (float(args[1]),float(args[2]),float(args[3]),float(args[4])) )
                 lastE = E
@@ -58,11 +58,11 @@ def main():
         #return 6
         #return  ( ( ve * math.log1p(ve) ) ) / 2 + ve + 2
         #return  ( ( math.log1p(ve) ) )  + ve + 2
-        #if ve < 4:
-        #    return math.log1p(ve)
-        #return  ve * 2/3 + 3
+        if ve < 4:
+            return math.log1p(ve) + 5
+        return  ve * 2/3 + 3.720
         #return  ve  + 1
-        return  math.log1p(ve * 5) * 2.5 # 12.05
+        return  math.log1p(ve * 5) * 2.1 - 1 # 12.05
 
 
     def searchmap():
@@ -71,7 +71,7 @@ def main():
         global target
         j = 0
         while True:
-            #time.sleep(0.05)
+            time.sleep(0.08)
             if node['Status'] < 0 or node['Status'] > 4:
                 continue
             curDis = 9999
@@ -90,6 +90,8 @@ def main():
                     curDis = dis
                     curPoint = i
                     current = i
+
+
             #current v
             v = math.sqrt( math.fabs(math.pow( node['V_n'],2 ) + math.pow( node['V_e'],2 )  + math.pow( node['V_earth'],2 ) )) 
             for i in range(curPoint,len(hdMap)):
@@ -128,7 +130,6 @@ def main():
                 dis = dis * -1
                 h = h * -1
                 pass
-            dis = x1
             dhead = 0
             ddhead = 0
             if curPoint + curPoint - tarPoint > 0:
@@ -137,10 +138,9 @@ def main():
                 #dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint + ( curPoint - tarPoint)/3 ][2]/2
             if curPoint + curPoint - tarPoint > 0:
                 ddhead = hdMap[tarPoint][2]/4 - hdMap[curPoint - 2][2] / 2 + hdMap[curPoint - tarPoint + curPoint][2] / 4
-            content = {'Dis':h,'Head':head,'DHead':dhead,'DDHead':ddhead}
+            content = {'Dis':dis,'Head':head,'DHead':dhead,'DDHead':ddhead}
             pub.sendPro('Diff',content)
             j = (j + 1) % 9999
-            time.sleep(0.05)
             if j%5 ==0:
                 print(content)
                 print('head = ',node['Head'])

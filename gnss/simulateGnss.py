@@ -62,7 +62,7 @@ while True:
 
             pub.sendPro('CurGNSS',args)
             if i%5 == 0:
-                print('V : ', float(args[5]) * 3.6, '  Steer : ', int( float(args[19]) * 256 + float(args[20]) - 1024) )
+                #print('V : ', float(args[5]) * 3.6, '  Steer : ', int( float(args[19]) * 256 + float(args[20]) - 1024) )
                 print('*********************************************************************************************************************************')
             time.sleep(0.05)
         pass

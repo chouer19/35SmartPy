@@ -213,7 +213,7 @@ def main():
 
         sub = ctx.socket(zmq.SUB)
         sub.connect('tcp://localhost:8088')
-        sub.setsockopt(zmq.SUBSCRIBE,'CANBrake')
+        sub.setsockopt(zmq.SUBSCRIBE,'CANGun')
         while True:
             content = sub.recvPro()
             canGunMode = content['Mode']

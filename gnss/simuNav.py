@@ -38,15 +38,18 @@ def main():
         for line in fi.readlines():
             i = (i + 1) % 99999
             args = line.split('\t')
+            temp = args[1]
+            args[1] = args[2]
+            args[2] = temp
             E,N,Z,Z_l = UTM.from_latlon( float((args[1])) , float((args[2])) )
             #ids = math.pow(E-lastE,2) + math.pow(N-lastN,2)
             #print(ids)
             if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.25  ):  
-                hdMap.append( (float(lastargs[1])/2 + float(args[1])/2 ,  float(args[2])/2  + float(lastargs[2])/2 ,float(args[3])/2  + float(lastargs[3])/2   , float(args[4])/2  + float(lastargs[4]) /2 ) )
-                hdMap.append( (float(args[1]),float(args[2]),float(args[3]),float(args[4])) )
+                hdMap.append( (float(lastargs[1])/2 + float(args[1])/2 ,  float(args[2])/2  + float(lastargs[2])/2 ,float(args[5])/2  + float(lastargs[5])/2  ) )
+                hdMap.append( (float(args[1]),float(args[2]),float(args[5])) )
                 lastE = E 
                 lastN = N 
-                lastargs[1],lastargs[2],lastargs[3],lastargs[4] = args[1],args[2],args[3],args[4]
+                lastargs[1],lastargs[2],lastargs[5] = args[1],args[2],args[5]
         fi.close()
         print('length map is ',len(hdMap))
     loadmap()
@@ -77,9 +80,13 @@ def main():
         while True:
             #time.sleep(0.05)
             args = node
-            lat,lon,head,status,gnssSpeed,Steer = float(args[1]),float(args[2]),float(args[3]) ,float(args[4]),float(args[5]),float(args[6])
+            status = 0
+            gnssSpeed = 5
+            #lat,lon,head,status,gnssSpeed,Steer = float(args[1]),float(args[2]),float(args[3]) ,float(args[4]),float(args[5]),float(args[6])
+            lat,lon,head = float(args[2]),float(args[1]),float(args[5])
             if status < 0 or status > 4:
-                continue
+                #continue
+                pass
             curDis = 9999
             curPoint = 0
             tarDis = 9999
@@ -188,7 +195,10 @@ def main():
                     pygame.quit()
                     sys.exit()
             mat = []
-            centerE,centerN,Z,Z_l = UTM.from_latlon( float(node[1]), float(node[2]) )
+            #temp = node[1]
+            #node[1] = node[2]
+            #node[2] = temp
+            centerE,centerN,Z,Z_l = UTM.from_latlon( float(node[2]), float(node[1]) )
             for content in hdMap:
                 E,N,Z,Z_l = UTM.from_latlon( content[0], content[1] )
                 #print(E - centerE)
@@ -203,8 +213,8 @@ def main():
             E,N,Z,Z_l = UTM.from_latlon( hdMap[target][0], hdMap[target][1] )
             pygame.draw.circle(screen, RED, [int ((E-centerE) * kk) + W/2 , int (-1 * (N - centerN)* kk)+ H/2] , 3, 0)
             off = 0.5
-            NN = -1000 * math.cos( math.radians(float(node[3]) + off )  )
-            EE = 1000 * math.sin( math.radians(float(node[3]) + off ) )
+            NN = -1000 * math.cos( math.radians(float(node[5]) + off )  )
+            EE = 1000 * math.sin( math.radians(float(node[5]) + off ) )
             pygame.draw.line(screen, RED, [W/2, H/2], [W/2 + EE, H/2 + NN], 2)
             pygame.display.update()
             fpsClock.tick(FPS)
