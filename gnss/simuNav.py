@@ -27,13 +27,13 @@ def main():
     pub.bind('tcp://*:8083')
     def loadmap():
         print('loading map............')
-        fi =  open('map.txt','r')
+        fi =  open('./map/map.txt','r')
         i = 0 
         lastE = 0 
         lastN = 0 
         line = fi.readlines()[0]
         fi.close()
-        fi =  open('map.txt','r')
+        fi =  open('./map/map.txt','r')
         lastargs = line.split('\t')
         for line in fi.readlines():
             i = (i + 1) % 99999
@@ -77,7 +77,7 @@ def main():
         while True:
             #time.sleep(0.05)
             args = node
-            lat,lon,head,status,gnssSpeed,Steer = float(args[1]),float(args[2]),float(args[3]),float(args[4]),float(args[5]),float(args[6])
+            lat,lon,head,status,gnssSpeed,Steer = float(args[1]),float(args[2]),float(args[3]) ,float(args[4]),float(args[5]),float(args[6])
             if status < 0 or status > 4:
                 continue
             curDis = 9999
@@ -161,8 +161,8 @@ def main():
         global current
         global target
         kk = 20
-        W = 800
-        H = 800
+        W = 1000
+        H = 1000
         pygame.init()
         screen = pygame.display.set_mode((W,H))
         #screen = pygame.display.set_mode((1361,1001))
@@ -189,8 +189,6 @@ def main():
                     sys.exit()
             mat = []
             centerE,centerN,Z,Z_l = UTM.from_latlon( float(node[1]), float(node[2]) )
-            NN = -100 * math.cos( math.radians(float(node[3])) )
-            EE = 100 * math.sin( math.radians(float(node[3])) )
             for content in hdMap:
                 E,N,Z,Z_l = UTM.from_latlon( content[0], content[1] )
                 #print(E - centerE)
@@ -204,6 +202,9 @@ def main():
             pygame.draw.circle(screen, DARKPINK, [int ((E-centerE) * kk) + W/2 , int (-1 * (N - centerN)* kk)+  H/2] , 4, 0)
             E,N,Z,Z_l = UTM.from_latlon( hdMap[target][0], hdMap[target][1] )
             pygame.draw.circle(screen, RED, [int ((E-centerE) * kk) + W/2 , int (-1 * (N - centerN)* kk)+ H/2] , 3, 0)
+            off = 0.5
+            NN = -1000 * math.cos( math.radians(float(node[3]) + off )  )
+            EE = 1000 * math.sin( math.radians(float(node[3]) + off ) )
             pygame.draw.line(screen, RED, [W/2, H/2], [W/2 + EE, H/2 + NN], 2)
             pygame.display.update()
             fpsClock.tick(FPS)

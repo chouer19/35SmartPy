@@ -13,7 +13,7 @@ pub = ctx.socket(zmq.PUB)
 pub.bind('tcp://*:8080')
 while True:
      i = 0
-     with open('offline.txt','r') as fi:
+     with open('./map/offline.txt','r') as fi:
         for line in fi.readlines():
             i = (i+1) % 9999
             args = line.split('\t')
@@ -61,7 +61,7 @@ while True:
             #controlValue= float(args[35])
 
             pub.sendPro('CurGNSS',args)
-            if i%25 == 0:
+            if i%5 == 0:
                 print('V : ', float(args[5]) * 3.6, '  Steer : ', int( float(args[19]) * 256 + float(args[20]) - 1024) )
                 print('*********************************************************************************************************************************')
             time.sleep(0.05)
