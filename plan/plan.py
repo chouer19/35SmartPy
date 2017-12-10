@@ -7,6 +7,7 @@ from proContext import *
 from proPID import *
 import UTM 
 import math
+import random
 
 def main():
     ctx = proContext()
@@ -17,12 +18,12 @@ def main():
     subMap.connect('tcp://localhost:8083')
     subMap.setsockopt(zmq.SUBSCRIBE,'Diff')
 
-    pidDis = PID(P= 8.2, I = 0.0, D = 0.5)
+    pidDis = PID(P= 10.8, I = 0.0, D = 0.0)
     pidDis.setWindup(50.0)
-    pidHead = PID(P= 4.2, I = 0.0, D = 0.8)
+    pidHead = PID(P= 4.2, I = 0.0, D = 0.0)
     #pidHead = PID(P= 0.0, I = 0.0, D = 0.0)
     pidHead.setWindup(50.0)
-    pidDHead = PID(P=4.6, I = 0.0, D = 0.6)
+    pidDHead = PID(P=4.6, I = 0.0, D = 0.0)
     #pidDHead = PID(P=0.0, I = 0.0, D = 0.0)
     pidDHead.setWindup(25.0)
 
@@ -49,7 +50,7 @@ def main():
             #steer = outDis + outHead 
             speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
 
-            content = {'Mode':0x20,'Value':int(steer - 15)  }
+            content = {'Mode':0x20,'Value':int(steer - 16 + random.randint(0,1) )   }
             pub.sendPro('PlanSteer',content)
             j = (j + 1) % 999999
             if j % 1 == 0:
