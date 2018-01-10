@@ -152,6 +152,7 @@ class MCU:
     def readGNSS(self):
         if len(self.bytes_new) < 61:
             self.bytes_new = self.UARTreadGNSS().contents
+            #print(self.bytes_new)
         self.bytes = self.bytes_new
         self.bytes_new = self.UARTreadGNSS().contents
         mark = 0

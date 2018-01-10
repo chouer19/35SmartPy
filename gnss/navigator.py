@@ -24,28 +24,38 @@ def main():
     ctx = proContext()
     pub = ctx.socket(zmq.PUB)
     pub.bind('tcp://*:8083')
+    def getRelatedXY(x0,y0,x1,y1,angle):
+        angle = angle + 180
+        x = math.cos(math.radians(angle)) * (x1 - x0) - math.sin(math.radians(angle)) * (y1 - y0)
+        y = math.sin(math.radians(angle)) * (x1 - x0) + math.cos(math.radians(angle)) * (y1 - y0)
+        return -x, y
+
+
     def loadmap():
         print('loading map............')
-        fi =  open('map.txt','r')
+        fi =  open('./map/map.txt','r')
         i = 0
         lastE = 0
         lastN = 0
         line = fi.readlines()[0]
         fi.close()
-        fi =  open('map.txt','r')
+        fi =  open('./map/map.txt','r')
         lastargs = line.split('\t')
         for line in fi.readlines():
             i = (i + 1) % 99999
             args = line.split('\t')
+            #temp = args[1]
+            #args[1] = args[2]
+            #args[2] = temp
+            #args[3] = args[5]
             E,N,Z,Z_l = UTM.from_latlon( float((args[1])) , float((args[2])) )
-            #ids = math.pow(E-lastE,2) + math.pow(N-lastN,2)
-            #print(ids)
-            if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.10  ):
-                hdMap.append( (float(lastargs[1])/2 + float(args[1])/2 ,  float(args[2])/2  + float(lastargs[2])/2 ,float(args[3])/2  + float(lastargs[3])/2   , float(args[4])/2  + float(lastargs[4]) /2 ) )
+            if( math.pow(E-lastE,2) + math.pow(N-lastN,2) > 0.25  ):
+                #hdMap.append( (float(lastargs[1])/2 + float(args[1])/2 ,  float(args[2])/2  + float(lastargs[2])/2 ,float(args[3])/2  + float(lastargs[3])/2   , float(args[4])/2  + float(lastargs[4]) /2 ) )
                 hdMap.append( (float(args[1]),float(args[2]),float(args[3]),float(args[4])) )
-                lastE = E
-                lastN = N
-                lastargs[1],lastargs[2],lastargs[3],lastargs[4] = args[1],args[2],args[3],args[4]
+                #lastE = E
+                #lastN = N
+                #lastargs[1],lastargs[2],lastargs[3],lastargs[4] = args[1],args[2],args[3],args[4]
+            #hdMap.append( (float(args[1]),float(args[2]),float(args[3]),float(args[4])) )
         fi.close()
         print('length map is ',len(hdMap))
     loadmap()
@@ -71,26 +81,29 @@ def main():
         global target
         j = 0
         while True:
-            time.sleep(0.08)
+            time.sleep(0.05)
             if node['Status'] < 0 or node['Status'] > 4:
                 continue
             curDis = 9999
             curPoint = 0
             tarDis = 9999
             tarPoint = 0
+            dis = 99999
             #try:
             easting,northing,zone,zone_letter = UTM.from_latlon(node['Lat'],node['Lon'])
             for i in range(0,len(hdMap)):
-                if math.fabs( int(node['Head']  - hdMap[i][2]) ) > 90 :
+                dffhead = math.fabs( int(node['Head'] - hdMap[i][2]  )  )
+                if dffhead > 90 and dffhead < 270:
                     continue
                 #get nearest point ---> curPoint
                 E,N,Z,Z_l = UTM.from_latlon(hdMap[i][0] ,hdMap[i][1] )
                 dis = math.sqrt(math.fabs( math.pow(easting - E,2) + math.pow(northing - N,2))  )
+                if dis > 15:
+                    continue
                 if dis < curDis:
                     curDis = dis
                     curPoint = i
                     current = i
-
 
             #current v
             v = math.sqrt( math.fabs(math.pow( node['V_n'],2 ) + math.pow( node['V_e'],2 )  + math.pow( node['V_earth'],2 ) )) 
@@ -109,7 +122,6 @@ def main():
                 head = head + 360
             if head > 180:
                 head = head - 360
-            #hai lun
             if curPoint == 0:
                 curPoint = curPoint + 1
             if curPoint == len(hdMap) - 1:
@@ -117,19 +129,7 @@ def main():
             E1,N1,Z1,Z_l1 = \
                              UTM.from_latlon(hdMap[curPoint][0] ,hdMap[curPoint][1] )
             E2,N2,Z2,Z_l2 = \
-                             UTM.from_latlon(hdMap[curPoint - 1][0] ,hdMap[curPoint - 1][1] )
-            a = math.sqrt( math.pow(easting - E1 ,2)  + math.pow(northing - N1  ,2)  )
-            b = math.sqrt( math.pow(easting - E2 ,2)  + math.pow(northing - N2  ,2)  )
-            c = math.sqrt( math.pow(E1 - E2 ,2)  + math.pow(N1 - N2  ,2)  )
-            p = (a + b + c)/2
-            h = 0
-            if c > 0:
-                h = math.sqrt( math.sqrt(p * (p-a) * (p-b) * (p-c))) * 2 / c
-            x1 = (E1 - easting) * math.cos( math.radians(node['Head']) ) - (N1 - northing) * math.sin( math.radians(node['Head']) )
-            if x1 < 0:
-                dis = dis * -1
-                h = h * -1
-                pass
+                             UTM.from_latlon(hdMap[int ((tarPoint + curPoint)/2) ][0] ,hdMap[ int( (tarPoint + curPoint)/2)][1] )
             dhead = 0
             ddhead = 0
             if curPoint + curPoint - tarPoint > 0:
@@ -138,7 +138,11 @@ def main():
                 #dhead = hdMap[tarPoint][2]/2 - hdMap[curPoint + ( curPoint - tarPoint)/3 ][2]/2
             if curPoint + curPoint - tarPoint > 0:
                 ddhead = hdMap[tarPoint][2]/4 - hdMap[curPoint - 2][2] / 2 + hdMap[curPoint - tarPoint + curPoint][2] / 4
-            content = {'Dis':dis,'Head':head,'DHead':dhead,'DDHead':ddhead}
+            #x,y = getRelatedXY(onlineData[curIndex].x, onlineData[curIndex].y, MapLanes[i].points[j].x + offsetX ,MapLanes[i].points[j].y + offsetY , onlineData[curIndex].head)
+            #print('easting diff is ::  ',easting - E1)
+            #print('northing diff is ::  ',northing - N1)
+            x,y = getRelatedXY(easting, northing, E1,N1,node['Head'])
+            content = {'Dis':x,'Head':head,'DHead':dhead,'DDHead':ddhead}
             pub.sendPro('Diff',content)
             j = (j + 1) % 9999
             if j%5 ==0:

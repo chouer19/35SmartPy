@@ -46,15 +46,22 @@ def main():
             outDHead = pidHead.output * -1
 
             steer = outDis + outHead + outDHead
+            #if outDis < -50:
+            #    steer = outDis + outHead
             #steer = outHead + outDHead
             #steer = outDis + outHead 
+            #steer = outDis
+            #steer = outHead
+            #steer = outDHead
             speed = math.fabs(10 * math.cos( math.radians(content['DHead'])*5 ) )
 
-            content = {'Mode':0x20,'Value':int(steer - 16 + random.randint(0,1) )   }
+            #content = {'Mode':0x20,'Value':int(steer - 16 + random.randint(0,1) )   }
+            #content = {'Mode':0x20,'Value':int(steer - 15)  }
+            content = {'Mode':0x20,'Value':int(steer - 14)  }
             pub.sendPro('PlanSteer',content)
             j = (j + 1) % 999999
-            if j % 1 == 0:
-                print('PlanSteer--->', content)
+            if j % 2 == 0:
+                print('PlanSteer--->', int(steer) )
                 print('.......................................................')
             content = {'Mode':0x00,'Value':speed,'Gear':0}
             #pub.sendPro('PlanSpeed',content)
